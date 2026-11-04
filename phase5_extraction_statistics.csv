@@ -1,0 +1,7 @@
+split,label,videos_processed,frames_extracted,avg_frames_per_video
+train,real,3053,30530,10.0
+train,fake,3053,30530,10.0
+val,real,654,6540,10.0
+val,fake,654,6540,10.0
+test,real,654,6540,10.0
+test,fake,654,6540,10.0
