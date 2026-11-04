@@ -69,6 +69,38 @@ public final class JsonHelper {
     }
 
     /**
+     * Extracts a sub-object JSON string by key.
+     */
+    public static Optional<String> getObject(String json, String key) {
+        if (json == null) return Optional.empty();
+        int keyIndex = json.indexOf("\"" + key + "\"");
+        if (keyIndex == -1) return Optional.empty();
+        int colon = json.indexOf(':', keyIndex);
+        if (colon == -1) return Optional.empty();
+        int openBrace = json.indexOf('{', colon);
+        if (openBrace == -1) return Optional.empty();
+        int depth = 0;
+        boolean inQuote = false;
+        boolean isEscaped = false;
+        for (int i = openBrace; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (isEscaped) { isEscaped = false; continue; }
+            if (c == '\\') { isEscaped = true; continue; }
+            if (c == '"') { inQuote = !inQuote; continue; }
+            if (!inQuote) {
+                if (c == '{') depth++;
+                else if (c == '}') {
+                    depth--;
+                    if (depth == 0) {
+                        return Optional.of(json.substring(openBrace, i + 1));
+                    }
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Parses a string array field.
      */
     public static List<String> getStringList(String json, String key) {
@@ -249,7 +281,134 @@ public final class JsonHelper {
         double confidence = getDouble(json, "confidence").orElse(0.0);
         String explanation = getString(json, "explanation").orElse("");
 
-        return new ModalityVerdict(modality, authenticityScore, anomaly, confidence, Optional.empty(), explanation);
+        Optional<ForensicSignal> signalTrace = parseForensicSignal(json);
+
+        return new ModalityVerdict(modality, authenticityScore, anomaly, confidence, signalTrace, explanation);
+    }
+
+    /**
+     * Deserializes a ForensicSignal object containing time-series points.
+     */
+    public static Optional<ForensicSignal> parseForensicSignal(String json) {
+        if (json == null) return Optional.empty();
+        int keyIndex = json.indexOf("\"raw_signal\"");
+        if (keyIndex == -1) {
+            keyIndex = json.indexOf("\"waveform_telemetry\"");
+        }
+        if (keyIndex == -1) return Optional.empty();
+
+        int colon = json.indexOf(':', keyIndex);
+        if (colon == -1) return Optional.empty();
+
+        String afterColon = json.substring(colon + 1).trim();
+        if (afterColon.startsWith("null")) return Optional.empty();
+
+        int openBrace = json.indexOf('{', colon);
+        if (openBrace == -1) return Optional.empty();
+
+        int depth = 0;
+        int closeBrace = -1;
+        boolean inQuote = false;
+        boolean isEscaped = false;
+        for (int i = openBrace; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (isEscaped) {
+                isEscaped = false;
+                continue;
+            }
+            if (c == '\\') {
+                isEscaped = true;
+                continue;
+            }
+            if (c == '"') {
+                inQuote = !inQuote;
+                continue;
+            }
+            if (!inQuote) {
+                if (c == '{') depth++;
+                else if (c == '}') {
+                    depth--;
+                    if (depth == 0) {
+                        closeBrace = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (closeBrace == -1) return Optional.empty();
+        String signalBlock = json.substring(openBrace, closeBrace + 1);
+
+        String modality = getString(signalBlock, "modality").orElse("rppg");
+        String signalName = getString(signalBlock, "signal_type")
+                .or(() -> getString(signalBlock, "signal_name"))
+                .orElse("bvp");
+        double samplingRate = getDouble(signalBlock, "sampling_rate_hz").orElse(30.0);
+
+        List<SignalPoint> points = new ArrayList<>();
+        int ptsKey = signalBlock.indexOf("\"points\"");
+        if (ptsKey != -1) {
+            int openBracket = signalBlock.indexOf('[', ptsKey);
+            if (openBracket != -1) {
+                int bDepth = 0;
+                int closeBracket = -1;
+                boolean bQuote = false;
+                boolean bEscape = false;
+                for (int i = openBracket; i < signalBlock.length(); i++) {
+                    char c = signalBlock.charAt(i);
+                    if (bEscape) { bEscape = false; continue; }
+                    if (c == '\\') { bEscape = true; continue; }
+                    if (c == '"') { bQuote = !bQuote; continue; }
+                    if (!bQuote) {
+                        if (c == '[') bDepth++;
+                        else if (c == ']') {
+                            bDepth--;
+                            if (bDepth == 0) {
+                                closeBracket = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (closeBracket != -1) {
+                    String ptsContent = signalBlock.substring(openBracket + 1, closeBracket);
+                    int ptDepth = 0;
+                    int ptStart = -1;
+                    boolean ptQuote = false;
+                    boolean ptEscape = false;
+                    for (int i = 0; i < ptsContent.length(); i++) {
+                        char c = ptsContent.charAt(i);
+                        if (ptEscape) { ptEscape = false; continue; }
+                        if (c == '\\') { ptEscape = true; continue; }
+                        if (c == '"') { ptQuote = !ptQuote; continue; }
+                        if (!ptQuote) {
+                            if (c == '{') {
+                                if (ptDepth == 0) ptStart = i;
+                                ptDepth++;
+                            } else if (c == '}') {
+                                ptDepth--;
+                                if (ptDepth == 0 && ptStart != -1) {
+                                    String ptJson = ptsContent.substring(ptStart, i + 1);
+                                    double ts = getDouble(ptJson, "timestamp_seconds")
+                                            .or(() -> getDouble(ptJson, "timestamp"))
+                                            .orElse(0.0);
+                                    long frameIdx = getLong(ptJson, "frame_index").orElse(0L);
+                                    double val = getDouble(ptJson, "value").orElse(0.0);
+                                    double conf = getDouble(ptJson, "confidence").orElse(1.0);
+                                    points.add(new SignalPoint(ts, frameIdx, val, conf));
+                                    ptStart = -1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (points.isEmpty()) return Optional.empty();
+
+        return Optional.of(new ForensicSignal(modality, signalName, samplingRate, points, Collections.emptyMap()));
     }
 
     /**

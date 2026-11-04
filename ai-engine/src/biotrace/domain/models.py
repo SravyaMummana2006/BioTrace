@@ -125,6 +125,10 @@ class AnalysisResult(BaseModel):
         default=None,
         description="Structured visual deepfake detection result, decoupled from physiological evidence.",
     )
+    multimodal_report: Optional[Any] = Field(
+        default=None,
+        description="Unified three-model multimodal forensic report (Phase 6 + Phase 9 + Phase 10).",
+    )
 
 
 class JobProgress(BaseModel):

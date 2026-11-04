@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you utilize BIOTrace in your research, software, or benchmarks, please cite it as below."
+title: "BIOTrace: Biological Intelligence & Multimodal Media Authenticity"
+authors:
+  - family-names: "Mummana"
+    given-names: "Sravya"
+    affiliation: "BIOTrace Research"
+version: "1.0.0"
+date-released: "2026-11-04"
+repository-code: "https://github.com/SravyaMummana2006/BioTrace"
+url: "https://github.com/SravyaMummana2006/BioTrace"
+keywords:
+  - "deepfake detection"
+  - "multimodal fusion"
+  - "rPPG"
+  - "remote photoplethysmography"
+  - "facial kinematics"
+  - "media forensics"
+  - "efficientnet"
+  - "bipartite actor isolation"
+license: "MIT"
+abstract: >
+  BIOTrace is an open-source biological intelligence and multimodal media authenticity
+  platform. It integrates convolutional visual feature extraction (EfficientNet-B0) with
+  subcutaneous remote photoplethysmography (rPPG CHROM/POS) and facial kinematic dynamics
+  (Eye Aspect Ratio velocity, opening dynamics, and bilateral blink asymmetry) to detect
+  synthetic and manipulated facial media under rigorous bipartite actor-isolated evaluation.

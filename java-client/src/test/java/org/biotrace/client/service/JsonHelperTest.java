@@ -206,4 +206,72 @@ class JsonHelperTest {
         assertEquals(1, result.modalityVerdicts().size());
         assertFalse(result.modalityVerdicts().get(0).isAuthenticityAssessed());
     }
+
+    @Test
+    @DisplayName("Should parse continuous 1D raw signal trace and points")
+    void testParseForensicSignalWithValidPoints() {
+        String json = """
+            {
+                "raw_signal": {
+                    "modality": "rppg",
+                    "signal_type": "bvp",
+                    "sampling_rate_hz": 24.3,
+                    "points": [
+                        {"timestamp_seconds": 0.041, "frame_index": 0, "value": 0.123, "confidence": 1.0},
+                        {"timestamp_seconds": 0.082, "frame_index": 1, "value": 0.456, "confidence": 0.98},
+                        {"timestamp_seconds": 0.123, "frame_index": 2, "value": -0.210, "confidence": 0.95}
+                    ]
+                }
+            }
+            """;
+
+        java.util.Optional<org.biotrace.client.model.ForensicSignal> sigOpt = JsonHelper.parseForensicSignal(json);
+        assertTrue(sigOpt.isPresent(), "ForensicSignal must be present");
+
+        org.biotrace.client.model.ForensicSignal sig = sigOpt.get();
+        assertEquals("rppg", sig.modality());
+        assertEquals("bvp", sig.signalName());
+        assertEquals(24.3, sig.samplingRateHz(), 1e-6);
+        assertEquals(3, sig.points().size());
+        assertEquals(0.041, sig.points().get(0).timestampSeconds(), 1e-6);
+        assertEquals(0.123, sig.points().get(0).value(), 1e-6);
+        assertEquals(0.456, sig.getMaxValue(), 1e-6);
+        assertEquals(-0.210, sig.getMinValue(), 1e-6);
+    }
+
+    @Test
+    @DisplayName("Should return Optional.empty when signal trace is null or empty")
+    void testParseForensicSignalNullOrEmpty() {
+        String nullSignalJson = "{\"raw_signal\": null}";
+        assertTrue(JsonHelper.parseForensicSignal(nullSignalJson).isEmpty());
+
+        String emptySignalJson = "{\"raw_signal\": {\"points\": []}}";
+        assertTrue(JsonHelper.parseForensicSignal(emptySignalJson).isEmpty());
+
+        String noSignalJson = "{\"other_field\": 123}";
+        assertTrue(JsonHelper.parseForensicSignal(noSignalJson).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should extract nested sub-object JSON string by key")
+    void testGetObjectHelper() {
+        String json = """
+            {
+                "status": "OK",
+                "visual_model": {
+                    "prediction": "FAKE",
+                    "fake_score": 0.791,
+                    "sampled_frames_count": 10
+                },
+                "count": 42
+            }
+            """;
+
+        java.util.Optional<String> objOpt = JsonHelper.getObject(json, "visual_model");
+        assertTrue(objOpt.isPresent());
+        String vBlock = objOpt.get();
+        assertEquals("FAKE", JsonHelper.getString(vBlock, "prediction").orElse(""));
+        assertEquals(0.791, JsonHelper.getDouble(vBlock, "fake_score").orElse(0.0), 1e-6);
+        assertEquals(10L, JsonHelper.getLong(vBlock, "sampled_frames_count").orElse(0L));
+    }
 }

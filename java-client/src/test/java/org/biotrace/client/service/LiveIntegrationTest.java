@@ -176,4 +176,17 @@ public class LiveIntegrationTest {
         assertEquals(JobStatus.CANCELLED, current.getStatus(),
                 "Expected CANCELLED but was " + current.getStatus() + ", error: " + current.getErrorMessage().orElse("none"));
     }
+
+    @Test
+    @DisplayName("Verify live baseline model prediction endpoint")
+    void testBaselinePrediction() {
+        Assumptions.assumeTrue(Files.exists(validVideoPath), "Synthetic video not found at " + validVideoPath);
+
+        String result = client.predictBaselineAsync(validVideoPath).join();
+        assertNotNull(result);
+        assertTrue(result.contains("prediction"), "Response should contain prediction field");
+        assertTrue(result.contains("raw_sigmoid_score"), "Response should contain raw_sigmoid_score");
+        assertTrue(result.contains("mean_logit"), "Response should contain mean_logit");
+        assertTrue(result.contains("experimental_baseline_disclaimer"), "Response must contain baseline disclaimer");
+    }
 }

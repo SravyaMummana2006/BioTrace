@@ -27,6 +27,19 @@ public class SignalWaveformPanel extends JPanel {
     private final JFreeChart chart;
     private final ChartPanel chartPanel;
     private final JLabel telemetrySummaryLabel;
+    private TelemetryState currentState = TelemetryState.WAITING_FOR_ANALYSIS;
+
+    public enum TelemetryState {
+        WAITING_FOR_ANALYSIS("Waiting for analysis"),
+        SIGNAL_ACQUIRED("Signal acquired"),
+        SIGNAL_UNAVAILABLE("Signal unavailable"),
+        INSUFFICIENT_SIGNAL_QUALITY("Insufficient signal quality"),
+        PROCESSING_FAILED("Processing failed");
+
+        private final String label;
+        TelemetryState(String label) { this.label = label; }
+        public String getLabel() { return label; }
+    }
 
     public SignalWaveformPanel(String signalTitle, Color traceColor) {
         setLayout(new BorderLayout(0, 4));
@@ -106,6 +119,44 @@ public class SignalWaveformPanel extends JPanel {
         add(footer, BorderLayout.SOUTH);
     }
 
+    public void setTelemetryState(TelemetryState state, String customMessage) {
+        this.currentState = state;
+        String message = (customMessage != null && !customMessage.isBlank())
+                ? customMessage
+                : "Status: " + state.getLabel();
+
+        switch (state) {
+            case SIGNAL_ACQUIRED -> {
+                telemetrySummaryLabel.setForeground(ForensicTheme.TEAL_PRIMARY);
+                telemetrySummaryLabel.setText(message);
+            }
+            case SIGNAL_UNAVAILABLE -> {
+                series.clear();
+                telemetrySummaryLabel.setForeground(ForensicTheme.TEXT_MUTED);
+                telemetrySummaryLabel.setText(message);
+            }
+            case INSUFFICIENT_SIGNAL_QUALITY -> {
+                series.clear();
+                telemetrySummaryLabel.setForeground(ForensicTheme.WARNING_AMBER);
+                telemetrySummaryLabel.setText(message);
+            }
+            case PROCESSING_FAILED -> {
+                series.clear();
+                telemetrySummaryLabel.setForeground(ForensicTheme.ALERT_RED);
+                telemetrySummaryLabel.setText(message);
+            }
+            case WAITING_FOR_ANALYSIS -> {
+                series.clear();
+                telemetrySummaryLabel.setForeground(ForensicTheme.TEXT_MUTED);
+                telemetrySummaryLabel.setText(message);
+            }
+        }
+    }
+
+    public TelemetryState getTelemetryState() {
+        return currentState;
+    }
+
     public void updateSignal(ForensicSignal signal) {
         series.clear();
         if (signal != null && !signal.points().isEmpty()) {
@@ -121,18 +172,19 @@ public class SignalWaveformPanel extends JPanel {
                 if (p.value() > max) max = p.value();
             }
 
-            telemetrySummaryLabel.setText(String.format(
+            setTelemetryState(TelemetryState.SIGNAL_ACQUIRED, String.format(
                     java.util.Locale.ROOT,
                     "Acquired: %s (%s) | Samples: %d | Duration: %.2fs | Range: [%.3f, %.3f]",
-                    signal.signalName(), signal.modality(), signal.size(), duration, min, max
+                    signal.signalName().toUpperCase(java.util.Locale.ROOT),
+                    signal.modality().toUpperCase(java.util.Locale.ROOT),
+                    signal.size(), duration, min, max
             ));
         } else {
-            telemetrySummaryLabel.setText("Status: No signal telemetry recorded for current inspection.");
+            setTelemetryState(TelemetryState.SIGNAL_UNAVAILABLE, "Status: Signal unavailable (no reliable facial ROI tracked or non-human media)");
         }
     }
 
     public void clear() {
-        series.clear();
-        telemetrySummaryLabel.setText("Status: Telemetry cleared.");
+        setTelemetryState(TelemetryState.WAITING_FOR_ANALYSIS, "Status: Awaiting signal acquisition");
     }
 }

@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from biotrace.api.v1 import health, jobs
+from biotrace.api.v1 import baseline, health, jobs, multimodal
 from biotrace.core.config import get_settings
 from biotrace.core.exceptions import (
     BioTraceBaseException,
@@ -91,6 +91,8 @@ def create_app() -> FastAPI:
     # --- Mount Version 1 Routers ---
     app.include_router(health.router, prefix="/api/v1")
     app.include_router(jobs.router, prefix="/api/v1")
+    app.include_router(baseline.router, prefix="/api/v1")
+    app.include_router(multimodal.router, prefix="/api/v1")
 
     return app
 

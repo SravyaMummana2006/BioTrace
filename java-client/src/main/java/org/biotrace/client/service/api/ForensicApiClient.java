@@ -61,4 +61,19 @@ public interface ForensicApiClient {
      * Retrieves visual baseline sensitivity map / Grad-CAM explanation.
      */
     CompletableFuture<String> getVisualExplanationJsonAsync(String jobId, Integer frameIndex);
+
+    /**
+     * Executes standalone baseline visual deepfake inference (EfficientNet-B0 CNN) on target video.
+     */
+    CompletableFuture<String> predictBaselineAsync(Path videoPath);
+
+    /**
+     * Executes unified multimodal forensic analysis (Phase 6 Visual + Phase 9 Physiological + Phase 10 Fusion).
+     */
+    CompletableFuture<String> analyzeMultimodalAsync(Path videoPath);
+
+    /**
+     * Retrieves multimodal system architecture information and provenance.
+     */
+    CompletableFuture<String> getMultimodalInfoAsync();
 }

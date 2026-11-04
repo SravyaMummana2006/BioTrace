@@ -275,6 +275,10 @@ public class BioTraceMainFrame extends JFrame {
         return workspaceDeck;
     }
 
+    public ForensicStudioView getStudioView() {
+        return (ForensicStudioView) workspaceDeck.getComponent(0);
+    }
+
     public void showView(String viewKey) {
         cardLayout.show(workspaceDeck, viewKey);
         for (NavButton btn : navButtons) {

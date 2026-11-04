@@ -1,0 +1,92 @@
+{
+  "checkpoint_path": "ai-engine\\models\\baseline\\best_model.pth",
+  "checkpoint_sha256": "332846ff1479d1f6cdb1313e3247e484ec4a832d5e7c2146fb3a2e0719f29cbc",
+  "evaluation_timestamp": "2026-11-04T05:42:13.025010",
+  "device": "cpu",
+  "model_architecture": "EfficientNet-B0 (torchvision)",
+  "pretrained_weights": "ImageNet-1K",
+  "validation_results": {
+    "primary_video_metrics": {
+      "num_videos": 1308,
+      "num_real_videos": 654,
+      "num_fake_videos": 654,
+      "roc_auc": 0.781191,
+      "average_precision": 0.772856,
+      "eer": 0.304281,
+      "optimal_threshold": 0.534347,
+      "accuracy": 0.707187,
+      "precision": 0.676662,
+      "recall": 0.793578,
+      "f1_score": 0.730471,
+      "brier_score": 0.200059,
+      "confusion_matrix": {
+        "matrix": [
+          [
+            406,
+            248
+          ],
+          [
+            135,
+            519
+          ]
+        ],
+        "true_negatives": 406,
+        "false_positives": 248,
+        "false_negatives": 135,
+        "true_positives": 519
+      },
+      "accuracy_at_optimal_threshold": 0.695719
+    },
+    "secondary_frame_metrics": {
+      "num_frames": 13080,
+      "roc_auc": 0.762466,
+      "accuracy": 0.692737,
+      "precision": 0.667821,
+      "recall": 0.766972,
+      "f1_score": 0.713971,
+      "notice": "Secondary diagnostic metrics only. Correlated frame predictions do not constitute independent observations."
+    }
+  },
+  "test_results": {
+    "primary_video_metrics": {
+      "num_videos": 1308,
+      "num_real_videos": 654,
+      "num_fake_videos": 654,
+      "roc_auc": 0.782059,
+      "average_precision": 0.755027,
+      "eer": 0.281346,
+      "optimal_threshold": 0.532128,
+      "accuracy": 0.722477,
+      "precision": 0.696888,
+      "recall": 0.787462,
+      "f1_score": 0.739411,
+      "brier_score": 0.199079,
+      "confusion_matrix": {
+        "matrix": [
+          [
+            430,
+            224
+          ],
+          [
+            139,
+            515
+          ]
+        ],
+        "true_negatives": 430,
+        "false_positives": 224,
+        "false_negatives": 139,
+        "true_positives": 515
+      },
+      "accuracy_at_optimal_threshold": 0.718654
+    },
+    "secondary_frame_metrics": {
+      "num_frames": 13080,
+      "roc_auc": 0.762402,
+      "accuracy": 0.699771,
+      "precision": 0.675628,
+      "recall": 0.768502,
+      "f1_score": 0.719079,
+      "notice": "Secondary diagnostic metrics only. Correlated frame predictions do not constitute independent observations."
+    }
+  }
+}

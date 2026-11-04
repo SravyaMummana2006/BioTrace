@@ -111,6 +111,7 @@ ai-engine/data/cache/*
 # Machine Learning Models and Weights (Research-grade)
 *.pt
 *.pth
+!ai-engine/models/baseline/best_model.pth
 *.onnx
 *.h5
 *.tflite

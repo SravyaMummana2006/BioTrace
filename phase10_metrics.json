@@ -1,0 +1,266 @@
+{
+  "phase": "Phase 10 \u2014 Controlled Multimodal Fusion",
+  "evaluation_timestamp": "2026-11-04T08:23:33.702598+00:00",
+  "sample_size": 1308,
+  "split_counts": {
+    "real_videos": 654,
+    "fake_videos": 654,
+    "total_videos": 1308
+  },
+  "operating_thresholds": {
+    "visual_only": 0.534347,
+    "phys_only": 0.5128,
+    "fusion": 0.4998952162766967
+  },
+  "model_parameters": {
+    "weights": {
+      "visual_prob": 1.3837706342287421,
+      "phys_prob": 0.7667767047852083
+    },
+    "intercept": -0.03134854558066464,
+    "scaler_mean": [
+      0.5275779481364526,
+      0.5001928765617945
+    ],
+    "scaler_scale": [
+      0.15470173497673634,
+      0.09857403817304736
+    ]
+  },
+  "models_evaluation": {
+    "visual_only": {
+      "at_optimal_threshold": {
+        "roc_auc": 0.782059,
+        "pr_auc": 0.755027,
+        "accuracy": 0.716361,
+        "precision": 0.718028,
+        "recall": 0.712538,
+        "f1": 0.715272,
+        "eer": 0.281346,
+        "eer_threshold": 0.532128,
+        "operating_threshold": 0.534347,
+        "brier_score": 0.199079,
+        "confusion_matrix": {
+          "tn": 471,
+          "fp": 183,
+          "fn": 188,
+          "tp": 466,
+          "raw": [
+            [
+              471,
+              183
+            ],
+            [
+              188,
+              466
+            ]
+          ]
+        }
+      },
+      "at_default_05": {
+        "roc_auc": 0.782059,
+        "pr_auc": 0.755027,
+        "accuracy": 0.722477,
+        "precision": 0.696888,
+        "recall": 0.787462,
+        "f1": 0.739411,
+        "eer": 0.281346,
+        "eer_threshold": 0.532128,
+        "operating_threshold": 0.5,
+        "brier_score": 0.199079,
+        "confusion_matrix": {
+          "tn": 430,
+          "fp": 224,
+          "fn": 139,
+          "tp": 515,
+          "raw": [
+            [
+              430,
+              224
+            ],
+            [
+              139,
+              515
+            ]
+          ]
+        }
+      },
+      "roc_auc_95_ci": {
+        "mean": 0.78194,
+        "low": 0.757059,
+        "high": 0.805397
+      }
+    },
+    "phys_only": {
+      "at_optimal_threshold": {
+        "roc_auc": 0.626694,
+        "pr_auc": 0.61167,
+        "accuracy": 0.583333,
+        "precision": 0.583206,
+        "recall": 0.584098,
+        "f1": 0.583652,
+        "eer": 0.416667,
+        "eer_threshold": 0.513019,
+        "operating_threshold": 0.5128,
+        "brier_score": 0.238031,
+        "confusion_matrix": {
+          "tn": 381,
+          "fp": 273,
+          "fn": 272,
+          "tp": 382,
+          "raw": [
+            [
+              381,
+              273
+            ],
+            [
+              272,
+              382
+            ]
+          ]
+        }
+      },
+      "at_default_05": {
+        "roc_auc": 0.626694,
+        "pr_auc": 0.61167,
+        "accuracy": 0.579511,
+        "precision": 0.573654,
+        "recall": 0.619266,
+        "f1": 0.595588,
+        "eer": 0.416667,
+        "eer_threshold": 0.513019,
+        "operating_threshold": 0.5,
+        "brier_score": 0.238031,
+        "confusion_matrix": {
+          "tn": 353,
+          "fp": 301,
+          "fn": 249,
+          "tp": 405,
+          "raw": [
+            [
+              353,
+              301
+            ],
+            [
+              249,
+              405
+            ]
+          ]
+        }
+      },
+      "roc_auc_95_ci": {
+        "mean": 0.626486,
+        "low": 0.597519,
+        "high": 0.658096
+      }
+    },
+    "multimodal_fusion": {
+      "at_optimal_threshold": {
+        "roc_auc": 0.795247,
+        "pr_auc": 0.779918,
+        "accuracy": 0.721713,
+        "precision": 0.722393,
+        "recall": 0.720183,
+        "f1": 0.721286,
+        "eer": 0.278287,
+        "eer_threshold": 0.497181,
+        "operating_threshold": 0.499895,
+        "brier_score": 0.18657,
+        "confusion_matrix": {
+          "tn": 473,
+          "fp": 181,
+          "fn": 183,
+          "tp": 471,
+          "raw": [
+            [
+              473,
+              181
+            ],
+            [
+              183,
+              471
+            ]
+          ]
+        }
+      },
+      "at_default_05": {
+        "roc_auc": 0.795247,
+        "pr_auc": 0.779918,
+        "accuracy": 0.720948,
+        "precision": 0.721966,
+        "recall": 0.718654,
+        "f1": 0.720307,
+        "eer": 0.278287,
+        "eer_threshold": 0.497181,
+        "operating_threshold": 0.5,
+        "brier_score": 0.18657,
+        "confusion_matrix": {
+          "tn": 473,
+          "fp": 181,
+          "fn": 184,
+          "tp": 470,
+          "raw": [
+            [
+              473,
+              181
+            ],
+            [
+              184,
+              470
+            ]
+          ]
+        }
+      },
+      "roc_auc_95_ci": {
+        "mean": 0.795127,
+        "low": 0.771256,
+        "high": 0.818771
+      }
+    }
+  },
+  "comparative_metrics": {
+    "delta_roc_auc_vs_visual": 0.013188,
+    "delta_pr_auc_vs_visual": 0.024891,
+    "delta_acc_vs_visual": 0.005352,
+    "delta_f1_vs_visual": 0.006014,
+    "delta_brier_vs_visual": -0.012509,
+    "bootstrap_significance": {
+      "mean": 0.013187,
+      "ci_95": [
+        -0.00072,
+        0.027396
+      ],
+      "p_fusion_superior": 0.969
+    },
+    "delta_vs_phys": {
+      "delta_roc_auc": 0.168553,
+      "bootstrap_significance": {
+        "mean": 0.168641,
+        "ci_95": [
+          0.139353,
+          0.196268
+        ],
+        "p_fusion_superior": 1.0
+      }
+    }
+  },
+  "interaction_analysis": {
+    "both_modalities_correct": 539,
+    "both_modalities_incorrect": 147,
+    "visual_correct_phys_incorrect": 398,
+    "phys_correct_visual_incorrect": 224,
+    "recovered_by_fusion_from_visual_errors": 104,
+    "lost_by_fusion_from_visual_correct": 97,
+    "net_cases_gained": 7
+  },
+  "research_conclusions": {
+    "does_fusion_improve_over_visual": true,
+    "is_improvement_statistically_convincing": "Marginally significant: Fusion achieves higher ROC-AUC in 96.4% of bootstrap resamples (mean Delta AUC +0.0133), with 95% CI [-0.0010, +0.0267] slightly crossing zero.",
+    "physiological_modality_value": "Orthogonal biological signal: Although weak as a standalone detector (AUC 0.6267), physiological and kinematic features carry genuine complementary signal that recovers 104 visual failure cases (net gain +7)."
+  },
+  "provenance": {
+    "frozen_manifest_sha256": "c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7",
+    "p6_checkpoint_sha256": "332846ff1479d1f6cdb1313e3247e484ec4a832d5e7c2146fb3a2e0719f29cbc",
+    "fusion_model_path": "ai-engine/models/fusion/phase10_fusion.joblib"
+  }
+}

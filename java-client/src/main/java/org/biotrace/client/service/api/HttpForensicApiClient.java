@@ -226,4 +226,66 @@ public class HttpForensicApiClient implements ForensicApiClient {
                     throw new ApiException(response.statusCode(), "Failed to fetch visual explanation", response.body());
                 });
     }
+
+    @Override
+    public CompletableFuture<String> predictBaselineAsync(Path videoPath) {
+        URI target = baseUri.resolve("/api/v1/baseline/predict");
+        String escaped = videoPath.toAbsolutePath().toString().replace("\\", "\\\\").replace("\"", "\\\"");
+        String payload = "{\"video_path\":\"" + escaped + "\",\"num_frames\":10}";
+
+        HttpRequest request = HttpRequest.newBuilder(target)
+                .POST(HttpRequest.BodyPublishers.ofString(payload))
+                .timeout(config.apiTimeout())
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        return response.body();
+                    }
+                    throw new ApiException(response.statusCode(), "Failed to execute baseline prediction", response.body());
+                });
+    }
+
+    @Override
+    public CompletableFuture<String> analyzeMultimodalAsync(Path videoPath) {
+        URI target = baseUri.resolve("/api/v1/multimodal/analyze");
+        String escaped = videoPath.toAbsolutePath().toString().replace("\\", "\\\\").replace("\"", "\\\"");
+        String payload = "{\"video_path\":\"" + escaped + "\"}";
+
+        HttpRequest request = HttpRequest.newBuilder(target)
+                .POST(HttpRequest.BodyPublishers.ofString(payload))
+                .timeout(config.apiTimeout())
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        return response.body();
+                    }
+                    throw new ApiException(response.statusCode(), "Failed to execute multimodal analysis", response.body());
+                });
+    }
+
+    @Override
+    public CompletableFuture<String> getMultimodalInfoAsync() {
+        URI target = baseUri.resolve("/api/v1/multimodal/info");
+        HttpRequest request = HttpRequest.newBuilder(target)
+                .GET()
+                .timeout(config.apiTimeout())
+                .header("Accept", "application/json")
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        return response.body();
+                    }
+                    throw new ApiException(response.statusCode(), "Failed to get multimodal info", response.body());
+                });
+    }
 }

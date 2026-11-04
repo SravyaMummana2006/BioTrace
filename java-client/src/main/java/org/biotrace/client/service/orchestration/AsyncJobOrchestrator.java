@@ -109,6 +109,16 @@ public class AsyncJobOrchestrator implements JobOrchestrator {
     }
 
     @Override
+    public CompletableFuture<String> runBaselinePrediction(Path videoPath) {
+        return apiClient.predictBaselineAsync(videoPath);
+    }
+
+    @Override
+    public CompletableFuture<String> runMultimodalAnalysis(Path videoPath) {
+        return apiClient.analyzeMultimodalAsync(videoPath);
+    }
+
+    @Override
     public void shutdown() {
         log.info("Shutting down AsyncJobOrchestrator worker threads...");
         activePollingTasks.values().forEach(task -> task.cancel(true));
