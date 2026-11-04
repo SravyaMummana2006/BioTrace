@@ -1,0 +1,4 @@
+cluster_degree,num_clusters,total_fake_videos,pct_of_total_clusters
+# STATUS: AWAITING_LOCAL_ARCHIVES
+# This schema computes the number of fake derivatives per unique base video cluster.
+# Populated upon ZIP central directory parsing.

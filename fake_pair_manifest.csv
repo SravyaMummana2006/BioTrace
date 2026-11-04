@@ -1,0 +1,4 @@
+fake_filename,base_id,target_id,base_id_in_metadata,base_in_real_zip,target_id_in_metadata,pairing_verified,verification_status
+# STATUS: AWAITING_LOCAL_ARCHIVES
+# This manifest schema is established and validated.
+# Real-vid.zip and Fake-vid.zip must be placed in datasets/ to populate verified member rows.

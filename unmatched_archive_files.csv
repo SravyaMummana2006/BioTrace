@@ -1,0 +1,4 @@
+archive_name,member_path,filename,error_type,details
+# STATUS: AWAITING_LOCAL_ARCHIVES
+# This schema catalogs corrupt filenames, multi-underscore anomalies, or unmatched base IDs.
+# Populated upon ZIP central directory parsing.

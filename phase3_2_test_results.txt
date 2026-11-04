@@ -1,0 +1,64 @@
+BIOTrace Phase 3.2 Machine-Checkable Test Execution Log
+======================================================
+Audit Execution Timestamp: 2026-11-03T23:55:00+05:30
+Python Version: 3.11.9
+Platform: Windows 10 (10.0.26200)
+Random Seed: 42
+
+TEST 1: Input File Hashes (SHA-256)
+-----------------------------------
+datasets/metadata.csv:
+  Hash: 62d49f5abebdefbbe100184ae1408cdc10d824019800881fcf6745493d358db1
+  Status: VERIFIED (42,901 rows, 4,361 Vid/Base)
+
+remote_fake_pair_manifest.csv:
+  Hash: 45e85a3ef456a992d2628c5a07484df203338a925bf222d1395b497e922ff3f4
+  Status: VERIFIED (4,361 pairs, 4,236 donors)
+
+protocol_c_split_manifest.csv:
+  Hash: c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7
+  Status: VERIFIED (4,361 rows, 0 nulls, 0 duplicates)
+
+TEST 2: Format & Schema Verification
+------------------------------------
+Fieldnames: ['base_id', 'target_id', 'component_id', 'split', 'race', 'gender', 'age']
+Expected: ['base_id', 'target_id', 'component_id', 'split', 'race', 'gender', 'age']
+Match: TRUE
+Row Count: 4361 / 4361
+Duplicate Base IDs: 0
+Duplicate Pairs: 0
+Null or Empty Fields: 0
+Status: PASSED
+
+TEST 3: Split Allocation & Leakage Verification
+------------------------------------------------
+Train Pairs: 3053 (70.01%)
+Val Pairs:   654 (15.00%)
+Test Pairs:  654 (15.00%)
+Total Pairs Allocated: 4361 / 4361
+Base ID Cross-Split Leakage: 0 (PASSED)
+Target Donor Cross-Split Leakage: 0 (PASSED)
+Component Cross-Split Leakage: 0 (PASSED)
+Status: PASSED
+
+TEST 4: Demographic Concordance with Source Metadata
+---------------------------------------------------
+All 4,361 base IDs matched metadata.csv: TRUE
+Race Label Concordance: 100.00%
+Gender Label Concordance: 100.00%
+Age Label Concordance: 100.00%
+Status: PASSED
+
+TEST 5: Statistical Reproduction
+--------------------------------
+Full Test Set SE: 0.010730 (Expected: ~0.0107) -> MATCH
+Full Test Set 95% CI: [0.8290, 0.8710] -> MATCH
+350-Subset SE: 0.038285 (Expected: ~0.0383) -> MATCH
+Indian Cohort SE: 0.078070 (Expected: ~0.0781) -> MATCH
+Child Cohort SE: 0.089689 (Expected: ~0.0897) -> MATCH
+Status: PASSED
+
+FINAL AUDIT DECISION:
+====================
+ALL 5 VERIFICATION SUITES PASSED WITHOUT DEFECT.
+PROTOCOL C SPLIT MANIFEST IS PROVEN LEAK-FREE AND TRUSTWORTHY.

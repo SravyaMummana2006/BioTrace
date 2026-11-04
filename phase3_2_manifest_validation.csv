@@ -1,0 +1,14 @@
+check_item,expected_value,observed_value,status
+total_rows,4361,4361,PASS
+header_columns,"base_id,target_id,component_id,split,race,gender,age","base_id,target_id,component_id,split,race,gender,age",PASS
+missing_values,0,0,PASS
+duplicate_base_ids,0,0,PASS
+valid_pairs_matched,4361,4361,PASS
+unique_target_donors,4236,4236,PASS
+unique_components,4236,4236,PASS
+train_pairs,3053,3053,PASS
+val_pairs,654,654,PASS
+test_pairs,654,654,PASS
+base_id_leakage,0,0,PASS
+target_donor_leakage,0,0,PASS
+metadata_demographics_concordance,100.00%,100.00%,PASS

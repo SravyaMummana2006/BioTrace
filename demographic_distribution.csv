@@ -1,0 +1,11 @@
+category,attribute_value,base_count,base_pct,unique_donor_count,unique_donor_pct,fakes_donor_count,fakes_donor_pct
+Gender,Female,1694,38.84%,1711,40.39%,1744,39.99%
+Gender,Male,2667,61.16%,2525,59.61%,2617,60.01%
+Race,Asian,215,4.93%,202,4.77%,206,4.72%
+Race,Black,456,10.46%,234,5.52%,241,5.53%
+Race,Indian,90,2.06%,62,1.46%,65,1.49%
+Race,Latino,194,4.45%,354,8.36%,365,8.37%
+Race,White,3406,78.10%,3384,79.89%,3484,79.89%
+Age,Adult,3923,89.96%,3797,89.64%,3908,89.61%
+Age,Child,67,1.54%,68,1.61%,68,1.56%
+Age,Elderly,371,8.51%,371,8.76%,385,8.83%

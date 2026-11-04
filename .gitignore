@@ -1,0 +1,142 @@
+# ==============================================================================
+# BIOTRACE FORENSIC PLATFORM - GITIGNORE
+# ==============================================================================
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# Environment variables & Local Secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Local Tooling & Sandboxes
+.tools/
+scratch/
+ProcLogs/
+
+# ------------------------------------------------------------------------------
+# Python & AI Engine
+# ------------------------------------------------------------------------------
+ai-engine/**/__pycache__/
+ai-engine/**/.pytest_cache/
+ai-engine/**/.ruff_cache/
+ai-engine/**/.mypy_cache/
+ai-engine/**/.coverage
+ai-engine/**/htmlcov/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ------------------------------------------------------------------------------
+# Java & Maven Client
+# ------------------------------------------------------------------------------
+java-client/target/
+java-client/bin/
+java-client/.flattened-pom.xml
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# ------------------------------------------------------------------------------
+# IDEs and Editors
+# ------------------------------------------------------------------------------
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+.springBeans
+
+# ------------------------------------------------------------------------------
+# Forensic Media, Datasets & Checkpoints
+# ------------------------------------------------------------------------------
+data/
+datasets/*
+!datasets/README.md
+!datasets/.gitkeep
+experiments/results/*
+!experiments/results/.gitkeep
+ai-engine/data/uploads/*
+!ai-engine/data/uploads/.gitkeep
+ai-engine/data/cache/*
+!ai-engine/data/cache/.gitkeep
+
+# Machine Learning Models and Weights (Research-grade)
+*.pt
+*.pth
+*.onnx
+*.h5
+*.tflite
+*.safetensors
+*.ckpt
+*.bin
+
+# Video and Media Assets (Forensic samples should never be committed)
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.flv
+*.m4v
+
+# Database and SQLite files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Log Files
+*.log
+logs/
+ai-engine/logs/
+java-client/logs/
