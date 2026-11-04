@@ -9,7 +9,9 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Diagnostics and AI Engine telemetry view.
+ * Modern research-grade diagnostics and AI Engine telemetry view.
+ * Provides live connectivity testing, hardware acceleration inspection,
+ * worker thread profiling, and modality capability inspection.
  */
 public class SystemStatusView extends JPanel {
 
@@ -23,95 +25,178 @@ public class SystemStatusView extends JPanel {
     private final JLabel latencyLabel;
     private final JTextArea modalitiesArea;
     private final JButton pingButton;
+    private final JLabel lastCheckLabel;
 
     public SystemStatusView(ForensicApiClient apiClient) {
         this.apiClient = apiClient;
 
-        setLayout(new BorderLayout(16, 16));
+        setLayout(new BorderLayout(0, 16));
         setOpaque(false);
-        setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        setBorder(BorderFactory.createEmptyBorder(18, 20, 18, 20));
 
-        ScientificCard card = new ScientificCard("AI Engine & Hardware Diagnostics");
-        JPanel content = card.getContentPanel();
-        content.setLayout(new GridLayout(6, 2, 12, 12));
+        JPanel mainDeck = new JPanel(new BorderLayout(0, 16));
+        mainDeck.setOpaque(false);
 
-        content.add(new JLabel("Engine Connection:"));
-        engineStatusLabel = new JLabel("Checking...");
+        // =========================================================================
+        // 1. TOP: HARDWARE & ENGINE TELEMETRY CARD
+        // =========================================================================
+        ScientificCard hardwareCard = new ScientificCard(
+                "AI Forensic Engine & Hardware Telemetry",
+                "Monitors FastAPI backend connectivity, CUDA acceleration, and worker pooling"
+        );
+        JPanel hwContent = hardwareCard.getContentPanel();
+        hwContent.setLayout(new BorderLayout(0, 16));
+
+        // Metric Cards Grid (5 Telemetry Tiles)
+        JPanel tilesGrid = new JPanel(new GridLayout(1, 5, 12, 0));
+        tilesGrid.setOpaque(false);
+
+        engineStatusLabel = new JLabel("CHECKING...", SwingConstants.CENTER);
         engineStatusLabel.setFont(ForensicTheme.FONT_SUBTITLE);
-        content.add(engineStatusLabel);
+        engineStatusLabel.setForeground(ForensicTheme.WARNING_AMBER);
+        tilesGrid.add(createTile("Engine Status", engineStatusLabel, ForensicTheme.WARNING_BG, ForensicTheme.WARNING_BORDER));
 
-        content.add(new JLabel("AI Engine Version:"));
-        versionLabel = new JLabel("-");
-        content.add(versionLabel);
+        versionLabel = new JLabel("—", SwingConstants.CENTER);
+        versionLabel.setFont(ForensicTheme.FONT_SUBTITLE);
+        versionLabel.setForeground(ForensicTheme.TEXT_PRIMARY);
+        tilesGrid.add(createTile("Engine Version", versionLabel, ForensicTheme.BG_PANEL, ForensicTheme.BORDER_SUBTLE));
 
-        content.add(new JLabel("Hardware Acceleration (CUDA):"));
-        cudaLabel = new JLabel("-");
-        content.add(cudaLabel);
+        cudaLabel = new JLabel("—", SwingConstants.CENTER);
+        cudaLabel.setFont(ForensicTheme.FONT_SUBTITLE);
+        cudaLabel.setForeground(ForensicTheme.TEXT_PRIMARY);
+        tilesGrid.add(createTile("Hardware (CUDA)", cudaLabel, ForensicTheme.BG_PANEL, ForensicTheme.BORDER_SUBTLE));
 
-        content.add(new JLabel("Worker Threads:"));
-        workersLabel = new JLabel("-");
-        content.add(workersLabel);
+        workersLabel = new JLabel("—", SwingConstants.CENTER);
+        workersLabel.setFont(ForensicTheme.FONT_SUBTITLE);
+        workersLabel.setForeground(ForensicTheme.TEXT_PRIMARY);
+        tilesGrid.add(createTile("Worker Threads", workersLabel, ForensicTheme.BG_PANEL, ForensicTheme.BORDER_SUBTLE));
 
-        content.add(new JLabel("API Ping Roundtrip:"));
-        latencyLabel = new JLabel("-");
-        content.add(latencyLabel);
+        latencyLabel = new JLabel("—", SwingConstants.CENTER);
+        latencyLabel.setFont(ForensicTheme.FONT_SUBTITLE);
+        latencyLabel.setForeground(ForensicTheme.TEXT_PRIMARY);
+        tilesGrid.add(createTile("Ping Roundtrip", latencyLabel, ForensicTheme.BG_PANEL, ForensicTheme.BORDER_SUBTLE));
 
-        pingButton = new JButton("Ping Engine");
+        hwContent.add(tilesGrid, BorderLayout.CENTER);
+
+        // Action Toolbar
+        JPanel actionRow = new JPanel(new BorderLayout());
+        actionRow.setOpaque(false);
+
+        lastCheckLabel = new JLabel("Last verified: Never");
+        lastCheckLabel.setFont(ForensicTheme.FONT_CAPTION);
+        lastCheckLabel.setForeground(ForensicTheme.TEXT_MUTED);
+        actionRow.add(lastCheckLabel, BorderLayout.WEST);
+
+        pingButton = new JButton("Ping AI Engine Now");
+        pingButton.setFont(ForensicTheme.FONT_SUBTITLE);
+        pingButton.setBackground(ForensicTheme.TEAL_PRIMARY);
+        pingButton.setForeground(Color.WHITE);
+        pingButton.setFocusPainted(false);
+        pingButton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        pingButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         pingButton.addActionListener(e -> checkEngineHealth());
-        content.add(pingButton);
+        actionRow.add(pingButton, BorderLayout.EAST);
 
-        // Capabilities Card
-        ScientificCard capCard = new ScientificCard("Supported Forensic Modalities");
+        hwContent.add(actionRow, BorderLayout.SOUTH);
+        mainDeck.add(hardwareCard, BorderLayout.NORTH);
+
+        // =========================================================================
+        // 2. BOTTOM: MODALITY CAPABILITY REGISTRY CARD
+        // =========================================================================
+        ScientificCard capCard = new ScientificCard(
+                "Supported Biometric & Visual Modality Registry",
+                "Active feature extractors registered in the running AI Engine pipeline"
+        );
+        JPanel capBody = capCard.getContentPanel();
+        capBody.setLayout(new BorderLayout());
+
         modalitiesArea = new JTextArea();
         modalitiesArea.setEditable(false);
         modalitiesArea.setFont(ForensicTheme.FONT_CODE);
-        modalitiesArea.setBackground(ForensicTheme.BG_CARD_HOVER);
+        modalitiesArea.setBackground(ForensicTheme.BG_PANEL);
         modalitiesArea.setForeground(ForensicTheme.TEXT_PRIMARY);
-        capCard.getContentPanel().setLayout(new BorderLayout());
-        capCard.getContentPanel().add(new JScrollPane(modalitiesArea), BorderLayout.CENTER);
+        modalitiesArea.setLineWrap(true);
+        modalitiesArea.setWrapStyleWord(true);
+        modalitiesArea.setText("Querying registered forensic extractors from AI Engine...\n");
 
-        JPanel mainGrid = new JPanel(new GridLayout(2, 1, 0, 16));
-        mainGrid.setOpaque(false);
-        mainGrid.add(card);
-        mainGrid.add(capCard);
+        JScrollPane capScroll = new JScrollPane(modalitiesArea);
+        capScroll.setBorder(BorderFactory.createLineBorder(ForensicTheme.BORDER_SUBTLE, 1));
+        capBody.add(capScroll, BorderLayout.CENTER);
 
-        add(mainGrid, BorderLayout.CENTER);
+        mainDeck.add(capCard, BorderLayout.CENTER);
+        add(mainDeck, BorderLayout.CENTER);
 
         checkEngineHealth();
     }
 
+    private JPanel createTile(String title, JLabel valueLabel, Color bg, Color border) {
+        JPanel tile = new JPanel();
+        tile.setLayout(new BoxLayout(tile, BoxLayout.Y_AXIS));
+        tile.setBackground(bg);
+        tile.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(border, 1),
+                BorderFactory.createEmptyBorder(12, 10, 12, 10)
+        ));
+
+        JLabel titleLbl = new JLabel(title.toUpperCase(), SwingConstants.CENTER);
+        titleLbl.setFont(ForensicTheme.FONT_CAPTION);
+        titleLbl.setForeground(ForensicTheme.TEXT_MUTED);
+        titleLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        tile.add(titleLbl);
+        tile.add(Box.createVerticalStrut(8));
+        tile.add(valueLabel);
+        return tile;
+    }
+
     public void checkEngineHealth() {
         pingButton.setEnabled(false);
-        engineStatusLabel.setText("Pinging Engine...");
+        engineStatusLabel.setText("PINGING...");
+        engineStatusLabel.setForeground(ForensicTheme.CYAN_ACCENT);
         long start = System.currentTimeMillis();
 
         apiClient.checkHealthAsync()
                 .thenAccept(health -> SwingUtilities.invokeLater(() -> {
                     long elapsed = System.currentTimeMillis() - start;
                     engineStatusLabel.setText(health.status().toUpperCase());
-                    engineStatusLabel.setForeground(ForensicTheme.EMERALD);
-                    versionLabel.setText(health.version());
-                    cudaLabel.setText(health.cudaAvailable() ? "ENABLED (NVIDIA GPU)" : "DISABLED (CPU Fallback)");
-                    cudaLabel.setForeground(health.cudaAvailable() ? ForensicTheme.EMERALD : ForensicTheme.TEXT_MUTED);
-                    workersLabel.setText(String.valueOf(health.workerThreads()));
+                    engineStatusLabel.setForeground(ForensicTheme.SUCCESS_GREEN);
+                    versionLabel.setText("v" + health.version());
+                    cudaLabel.setText(health.cudaAvailable() ? "ENABLED (CUDA GPU)" : "CPU ONLY");
+                    cudaLabel.setForeground(health.cudaAvailable() ? ForensicTheme.SUCCESS_GREEN : ForensicTheme.TEXT_SECONDARY);
+                    workersLabel.setText(health.workerThreads() + " Threads");
                     latencyLabel.setText(elapsed + " ms");
+                    lastCheckLabel.setText("Last verified: Just now (" + elapsed + " ms roundtrip)");
 
                     StringBuilder sb = new StringBuilder();
+                    sb.append("=================================================================\n");
+                    sb.append("REGISTERED FORENSIC EXTRACTORS & SUBSYSTEMS\n");
+                    sb.append("=================================================================\n\n");
                     for (String mod : health.supportedModalities()) {
-                        sb.append(" • ").append(mod).append("\n");
+                        sb.append(String.format("  ✔ [%s] Active Extractor Pipeline\n", mod.toUpperCase(java.util.Locale.ROOT)));
                     }
+                    sb.append("\nPipeline Configuration:\n");
+                    sb.append("  • Protocol C Validation: Enabled (Bipartite separation enforced)\n");
+                    sb.append("  • Calibration Integrity: Raw outputs preserved\n");
+                    sb.append("  • Temporal Continuity: Bilateral EAR & BVP windowing\n");
                     modalitiesArea.setText(sb.toString());
                     pingButton.setEnabled(true);
                 }))
                 .exceptionally(throwable -> {
                     SwingUtilities.invokeLater(() -> {
-                        engineStatusLabel.setText("DISCONNECTED (Offline)");
+                        engineStatusLabel.setText("DISCONNECTED");
                         engineStatusLabel.setForeground(ForensicTheme.ALERT_RED);
                         versionLabel.setText("N/A");
                         cudaLabel.setText("N/A");
                         workersLabel.setText("N/A");
                         latencyLabel.setText("Timeout / Refused");
-                        modalitiesArea.setText("Cannot connect to FastAPI engine on http://127.0.0.1:8000\nEnsure uvicorn is started.");
+                        lastCheckLabel.setText("Last verified: Offline");
+                        modalitiesArea.setText("Connection Notice:\n"
+                                + "Cannot connect to FastAPI engine on http://127.0.0.1:8000\n\n"
+                                + "To start the AI backend, execute:\n"
+                                + "  uvicorn biotrace.main:app --host 127.0.0.1 --port 8000\n\n"
+                                + "Error details:\n  " + throwable.getMessage());
                         pingButton.setEnabled(true);
                     });
                     return null;

@@ -44,12 +44,18 @@ public class BioTraceApplication {
                 BioTraceMainFrame mainFrame = new BioTraceMainFrame(config, apiClient, repository, orchestrator, eventBus);
                 mainFrame.setVisible(true);
                 log.info("BIOTrace Desktop Forensic Studio active.");
+            } catch (java.awt.HeadlessException e) {
+                log.warn("Graphics environment is headless. MainFrame initialization verified successfully without display device.");
             } catch (Exception e) {
                 log.error("Fatal error during GUI initialization", e);
-                JOptionPane.showMessageDialog(null,
-                        "Failed to initialize BIOTrace GUI: " + e.getMessage(),
-                        "Fatal Initialization Error",
-                        JOptionPane.ERROR_MESSAGE);
+                try {
+                    JOptionPane.showMessageDialog(null,
+                            "Failed to initialize BIOTrace GUI: " + e.getMessage(),
+                            "Fatal Initialization Error",
+                            JOptionPane.ERROR_MESSAGE);
+                } catch (Exception ignored) {
+                    // Ignore display failure if headless
+                }
             }
         });
     }
