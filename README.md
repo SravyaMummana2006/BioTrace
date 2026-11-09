@@ -163,44 +163,79 @@ Forensic Studio detecting synthetic facial manipulation:
 ## 7. Installation & Windows Quickstart
 
 ### Prerequisites
-1. **Java Development Kit**: JDK 21 or higher installed and on your `PATH`.
-2. **Python**: Python 3.11+ installed and on your `PATH`.
+1. **Java Development Kit**: JDK 21 or higher installed and on your `PATH` (or configured via `JAVA_HOME`).
+2. **Python**: Python 3.11 or 3.12 (with `pip`) installed and available.
 3. **Git**: Git for Windows.
 
-### Step 1: Clone Repository
+---
+
+### Option A: One-Click Instant Launch (Recommended)
+
+BIOTrace provides pre-configured root launcher scripts that automatically detect your Python environment, configure source paths, and manage dependencies:
+
+```powershell
+# 1. Clone repository
+git clone https://github.com/SravyaMummana2006/BioTrace.git
+cd BioTrace
+
+# 2. Terminal 1 — Start the Python AI Engine Backend:
+.\run_backend.ps1
+# (or double-click run_backend.bat)
+
+# 3. Terminal 2 — Launch the Java Desktop Forensic Studio:
+.\run_client.ps1
+# (or double-click run_client.bat)
+```
+
+The FastAPI backend automatically initializes on `http://127.0.0.1:8000`, with interactive Swagger documentation at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). The Java client connects automatically upon launch.
+
+---
+
+### Option B: Step-by-Step Manual Setup
+
+#### Step 1: Clone Repository
 ```powershell
 git clone https://github.com/SravyaMummana2006/BioTrace.git
 cd BioTrace
 ```
 
-### Step 2: Set Up Python AI Backend
+#### Step 2: Set Up Python AI Backend
+If you have multiple Python versions installed on Windows (e.g., Python 3.11 alongside Python 3.13), explicitly target Python 3.11 when creating your virtual environment:
+
 ```powershell
 cd ai-engine
 
-# Create and activate virtual environment
-python -m venv .venv
+# Create virtual environment using Python 3.11
+py -3.11 -m venv .venv
+# (or: python -m venv .venv if Python 3.11 is your default)
+
+# Activate virtual environment
 .venv\Scripts\activate
 
-# Install dependencies
+# Install dependencies and local package
 pip install -r requirements.txt
 ```
 
-### Step 3: Launch the FastAPI Backend Server
-```powershell
-# From within ai-engine/ with virtual environment activated:
-python -m uvicorn biotrace.main:app --host 127.0.0.1 --port 8000
-```
-Interactive API Swagger documentation is available at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+#### Step 3: Launch the FastAPI Backend Server
+> **Important:** Always include `--app-dir src` so Uvicorn resolves the `biotrace` module correctly:
 
-### Step 4: Build & Launch Java Forensic Studio
+```powershell
+# Inside ai-engine/ with virtual environment activated:
+python -m uvicorn biotrace.main:app --app-dir src --host 127.0.0.1 --port 8000
+```
+Swagger UI will be live at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+
+#### Step 4: Build & Launch Java Forensic Studio
 Open a new PowerShell terminal:
+
 ```powershell
 cd java-client
 
-# Run using the repository Maven wrapper script:
+# Run using the repository Maven wrapper:
 ..\scripts\run_mvn.ps1 -f pom.xml compile exec:java
+
 # Or if Maven is globally installed:
-# mvn compile exec:java
+mvn compile exec:java
 ```
 
 ---
