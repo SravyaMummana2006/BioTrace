@@ -169,74 +169,53 @@ Forensic Studio detecting synthetic facial manipulation:
 
 ---
 
-### Option A: One-Click Instant Launch (Recommended)
+### Option A: Unified One-Click Launch (Recommended)
 
-BIOTrace provides pre-configured root launcher scripts that automatically detect your Python environment, configure source paths, and manage dependencies:
+BIOTrace provides a unified workstation launcher (`run_workstation.bat` / `run_workstation.ps1`) that coordinates full startup: it automatically launches the FastAPI AI engine in the background, waits for deep learning models (PyTorch, MediaPipe, OpenCV) to complete initialization (~35–45 seconds on Windows), verifies the HTTP 200 health check, and launches the Java Desktop Forensic Studio once the engine is verified `ONLINE`:
 
 ```powershell
 # 1. Clone repository
 git clone https://github.com/SravyaMummana2006/BioTrace.git
 cd BioTrace
 
-# 2. Terminal 1 — Start the Python AI Engine Backend:
-.\run_backend.ps1
-# (or double-click run_backend.bat)
-
-# 3. Terminal 2 — Launch the Java Desktop Forensic Studio:
-.\run_client.ps1
-# (or double-click run_client.bat)
+# 2. Launch Unified Workstation:
+# Simply double-click run_workstation.bat (or run in PowerShell):
+.\run_workstation.ps1
 ```
-
-The FastAPI backend automatically initializes on `http://127.0.0.1:8000`, with interactive Swagger documentation at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). The Java client connects automatically upon launch.
 
 ---
 
-### Option B: Step-by-Step Manual Setup
+### Option B: Two-Terminal Manual Setup
 
-#### Step 1: Clone Repository
+If you prefer running the backend and frontend in separate dedicated terminal windows:
+
+#### Terminal 1 — Start the Python AI Engine Backend:
+> **Windows Tip:** If your machine has Python 3.13 set as the default in `PATH`, running standard `python` will fail because PyTorch and MediaPipe require Python 3.11/3.12. Always use `run_backend.bat` or target the `.venv` executable directly:
+
 ```powershell
-git clone https://github.com/SravyaMummana2006/BioTrace.git
-cd BioTrace
+# Option 1 (Easiest): Double-click run_backend.bat or run:
+.\run_backend.ps1
+
+# Option 2 (Direct PowerShell command using the pre-configured Python 3.11 virtualenv):
+.\ai-engine\.venv\Scripts\python.exe -m uvicorn biotrace.main:create_app --factory --app-dir ai-engine\src --host 127.0.0.1 --port 8000
 ```
 
-#### Step 2: Set Up & Activate Python AI Backend
-Because Windows may have multiple Python versions installed (e.g., Python 3.11 alongside Python 3.13), ensure you run with Python 3.11 where PyTorch and MediaPipe are supported.
+*Wait approximately 30–45 seconds until the terminal displays:*
+`INFO: Uvicorn running on http://127.0.0.1:8000` and Swagger UI is live at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-A pre-configured environment is provided in `ai-engine/.venv`:
-
-```powershell
-cd ai-engine
-
-# Activate virtual environment (Windows):
-.\.venv\Scripts\activate
-```
-
-*(Optional: To create a fresh virtual environment targeting Python 3.11 explicitly: `py -3.11 -m venv .venv` followed by `pip install -r requirements.txt`)*
-
-#### Step 3: Launch the FastAPI Backend Server
-> **Important:** With the virtual environment activated, always include `--app-dir src` so Uvicorn resolves the `biotrace` module correctly:
+#### Terminal 2 — Launch the Java Desktop Forensic Studio:
+Once the AI backend is running on port 8000:
 
 ```powershell
-# Inside ai-engine/ with .venv activated:
-python -m uvicorn biotrace.main:app --app-dir src --host 127.0.0.1 --port 8000
+# Double-click run_client.bat or run in PowerShell:
+.\run_client.ps1
 
-# Or execute directly via the virtualenv without activating:
-.\.venv\Scripts\python.exe -m uvicorn biotrace.main:app --app-dir src --host 127.0.0.1 --port 8000
-```
-Swagger UI will be live at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
-
-#### Step 4: Build & Launch Java Forensic Studio
-Open a new PowerShell terminal:
-
-```powershell
+# Or run using Maven directly:
 cd java-client
-
-# Run using the repository Maven wrapper:
-..\scripts\run_mvn.ps1 -f pom.xml compile exec:java
-
-# Or if Maven is globally installed:
 mvn compile exec:java
 ```
+
+The Java Forensic Studio will open with a green `ENGINE: ONLINE (v0.1.0)` status badge in the top-right header and is immediately ready to ingest media and execute analysis pipelines.
 
 ---
 

@@ -33,5 +33,5 @@ echo Working Dir : %ENGINE_DIR%
 set "PYTHONPATH=%ENGINE_DIR%\src;%PYTHONPATH%"
 if not defined MPLCONFIGDIR set "MPLCONFIGDIR=%TEMP%\biotrace_mpl"
 
-"!PYTHON_CMD!" -m uvicorn biotrace.main:app --app-dir src --host 127.0.0.1 --port 8000
+"!PYTHON_CMD!" -m uvicorn biotrace.main:create_app --factory --app-dir src --host 127.0.0.1 --port 8000
 pause

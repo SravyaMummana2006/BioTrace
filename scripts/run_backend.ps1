@@ -87,7 +87,7 @@ if (-not $env:MPLCONFIGDIR) {
     }
 }
 
-$uvicornArgs = @("-m", "uvicorn", "biotrace.main:app", "--app-dir", "src", "--host", $HostAddress, "--port", "$Port")
+$uvicornArgs = @("-m", "uvicorn", "biotrace.main:create_app", "--factory", "--app-dir", "src", "--host", $HostAddress, "--port", "$Port")
 if ($Reload) {
     $uvicornArgs += "--reload"
 }
