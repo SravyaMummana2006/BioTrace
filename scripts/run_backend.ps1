@@ -9,8 +9,12 @@ param(
 $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-if (-not $scriptDir) { $scriptDir = Get-Location }
-$rootDir = $scriptDir
+if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+if ((Split-Path -Leaf $scriptDir) -eq "scripts") {
+    $rootDir = Split-Path -Parent $scriptDir
+} else {
+    $rootDir = $scriptDir
+}
 $engineDir = Join-Path $rootDir "ai-engine"
 $srcDir = Join-Path $engineDir "src"
 

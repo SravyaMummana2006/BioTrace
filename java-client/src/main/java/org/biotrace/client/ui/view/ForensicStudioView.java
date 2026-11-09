@@ -463,10 +463,28 @@ public class ForensicStudioView extends JPanel {
         String pathStr = filePathField.getText();
         if (pathStr == null || pathStr.isBlank()) return;
 
+        File targetFile = new File(pathStr);
+        if (!targetFile.exists() || !targetFile.isFile()) {
+            stageLabel.setText("File Error: Selected video media file not found on disk.");
+            verdictBannerLabel.setText("MEDIA NOT FOUND — VERIFY INPUT FILE");
+            verdictBannerPanel.setBackground(ForensicTheme.ALERT_BG);
+            verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.ALERT_BORDER, 1));
+            verdictBannerLabel.setForeground(ForensicTheme.ALERT_RED);
+            verdictArea.setText("Target Media Validation Failure:\n"
+                    + "The file path '" + pathStr + "' does not exist or is not a readable file.\n\n"
+                    + "Action Required: Click 'Select Video File...' to browse and select a valid .mp4 or .avi video.");
+            return;
+        }
+
         List<String> modalities = new ArrayList<>();
         if (rppgCheckBox.isSelected()) modalities.add("rppg");
         if (blinkCheckBox.isSelected()) modalities.add("blink");
         if (dynamicsCheckBox.isSelected()) modalities.add("facial_dynamics");
+
+        if (modalities.isEmpty()) {
+            stageLabel.setText("Configuration Error: Please select at least one biometric modality.");
+            return;
+        }
 
         analyzeButton.setEnabled(false);
         cancelButton.setEnabled(true);
@@ -479,7 +497,7 @@ public class ForensicStudioView extends JPanel {
 
         verdictArea.setText("Forensic pipeline job submission dispatched.\nStreaming telemetry from backend...\n");
 
-        orchestrator.startAnalysis(Path.of(pathStr), modalities)
+        orchestrator.startAnalysis(targetFile.toPath(), modalities)
                 .thenAccept(job -> SwingUtilities.invokeLater(() -> {
                     this.currentJobId = job.getId();
                     statusBadge.setStatus(job.getStatus());
@@ -489,19 +507,39 @@ public class ForensicStudioView extends JPanel {
                     SwingUtilities.invokeLater(() -> {
                         analyzeButton.setEnabled(true);
                         cancelButton.setEnabled(false);
-                        stageLabel.setText("Pipeline Error: " + throwable.getMessage());
+
+                        Throwable root = throwable;
+                        while (root.getCause() != null && root != root.getCause()) {
+                            root = root.getCause();
+                        }
+                        String errMsg = root.getMessage() != null ? root.getMessage() : root.toString();
+                        stageLabel.setText("Pipeline Error: " + errMsg);
                         verdictBannerLabel.setText("CONNECTION FAILED — ENGINE UNREACHABLE");
                         verdictBannerPanel.setBackground(ForensicTheme.ALERT_BG);
                         verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.ALERT_BORDER, 1));
                         verdictBannerLabel.setForeground(ForensicTheme.ALERT_RED);
-                        verdictArea.setText("Error: Could not reach AI Engine.\nEnsure FastAPI engine is running on localhost:8000.\n"
-                                + throwable.getMessage());
+
+                        String detailMsg;
+                        if (root instanceof org.biotrace.client.core.exception.ApiException apiEx) {
+                            if (apiEx.getStatusCode() == 500) {
+                                detailMsg = "AI Engine reported an internal error (HTTP 500).\nDetails: "
+                                        + (apiEx.getResponseBody() != null ? apiEx.getResponseBody() : apiEx.getMessage());
+                            } else {
+                                detailMsg = "AI Engine returned HTTP " + apiEx.getStatusCode() + ".\nResponse: "
+                                        + apiEx.getResponseBody();
+                            }
+                        } else {
+                            detailMsg = "Could not connect to FastAPI Engine on http://127.0.0.1:8000.\n"
+                                    + "Please launch the engine first using 'run_backend.bat' or 'scripts/run_backend.ps1'.\n\n"
+                                    + "System Error: " + errMsg;
+                        }
+                        verdictArea.setText(detailMsg);
                     });
                     return null;
                 });
 
         // Concurrently run unified multimodal verification (Phase 6 Visual + Phase 9 Physiological + Phase 10 Fusion)
-        orchestrator.runMultimodalAnalysis(Path.of(pathStr))
+        orchestrator.runMultimodalAnalysis(targetFile.toPath())
                 .thenAccept(json -> SwingUtilities.invokeLater(() -> applyMultimodalReport(json, pathStr)))
                 .exceptionally(throwable -> {
                     // Do not fail hard if multimodal service encounters an unhandled edge case
@@ -527,6 +565,15 @@ public class ForensicStudioView extends JPanel {
         String pathStr = filePathField.getText();
         if (pathStr == null || pathStr.isBlank()) return;
 
+        File targetFile = new File(pathStr);
+        if (!targetFile.exists() || !targetFile.isFile()) {
+            stageLabel.setText("File Error: Selected video media file not found on disk.");
+            verdictArea.setText("Baseline Prediction Failed (404):\n"
+                    + "The file path '" + pathStr + "' does not exist or is not a readable file.\n\n"
+                    + "Action Required: Click 'Select Video File...' to browse and select a valid .mp4 or .avi video.");
+            return;
+        }
+
         baselineButton.setEnabled(false);
         analyzeButton.setEnabled(false);
         stageLabel.setText("Executing baseline CNN inference (EfficientNet-B0)...");
@@ -537,7 +584,7 @@ public class ForensicStudioView extends JPanel {
 
         verdictArea.setText("Evaluating target video with ImageNet-pretrained EfficientNet-B0 baseline...\nMean-logit pooling across 10 frames in progress...\n");
 
-        orchestrator.runBaselinePrediction(Path.of(pathStr))
+        orchestrator.runBaselinePrediction(targetFile.toPath())
                 .thenAccept(json -> SwingUtilities.invokeLater(() -> {
                     baselineButton.setEnabled(true);
                     analyzeButton.setEnabled(true);
@@ -598,8 +645,15 @@ public class ForensicStudioView extends JPanel {
                     SwingUtilities.invokeLater(() -> {
                         baselineButton.setEnabled(true);
                         analyzeButton.setEnabled(true);
-                        stageLabel.setText("Baseline Error: " + throwable.getMessage());
-                        verdictArea.setText("Baseline Prediction Failed:\n" + throwable.getMessage());
+
+                        Throwable root = throwable;
+                        while (root.getCause() != null && root != root.getCause()) {
+                            root = root.getCause();
+                        }
+                        String errMsg = root.getMessage() != null ? root.getMessage() : root.toString();
+                        stageLabel.setText("Baseline Error: " + errMsg);
+                        verdictArea.setText("Baseline Prediction Failed:\n" + errMsg
+                                + "\n\nEnsure FastAPI engine is running on http://127.0.0.1:8000 (run 'run_backend.bat').");
                     });
                     return null;
                 });

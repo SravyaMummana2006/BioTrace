@@ -6,7 +6,17 @@ echo   BIOTrace Forensic Desktop Client Launcher
 echo =====================================================
 
 set SCRIPT_DIR=%~dp0
-cd /d "%SCRIPT_DIR%java-client"
+if exist "%SCRIPT_DIR%java-client" (
+    set "ROOT_DIR=%SCRIPT_DIR%"
+) else (
+    set "ROOT_DIR=%SCRIPT_DIR%..\"
+)
+set "CLIENT_DIR=%ROOT_DIR%java-client"
+cd /d "%CLIENT_DIR%"
 
-powershell -ExecutionPolicy Bypass -File "%SCRIPT_DIR%run_client.ps1"
+if exist "%ROOT_DIR%run_client.ps1" (
+    powershell -ExecutionPolicy Bypass -File "%ROOT_DIR%run_client.ps1"
+) else (
+    powershell -ExecutionPolicy Bypass -File "%ROOT_DIR%scripts\run_client.ps1"
+)
 pause

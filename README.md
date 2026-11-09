@@ -199,29 +199,29 @@ git clone https://github.com/SravyaMummana2006/BioTrace.git
 cd BioTrace
 ```
 
-#### Step 2: Set Up Python AI Backend
-If you have multiple Python versions installed on Windows (e.g., Python 3.11 alongside Python 3.13), explicitly target Python 3.11 when creating your virtual environment:
+#### Step 2: Set Up & Activate Python AI Backend
+Because Windows may have multiple Python versions installed (e.g., Python 3.11 alongside Python 3.13), ensure you run with Python 3.11 where PyTorch and MediaPipe are supported.
+
+A pre-configured environment is provided in `ai-engine/.venv`:
 
 ```powershell
 cd ai-engine
 
-# Create virtual environment using Python 3.11
-py -3.11 -m venv .venv
-# (or: python -m venv .venv if Python 3.11 is your default)
-
-# Activate virtual environment
-.venv\Scripts\activate
-
-# Install dependencies and local package
-pip install -r requirements.txt
+# Activate virtual environment (Windows):
+.\.venv\Scripts\activate
 ```
 
+*(Optional: To create a fresh virtual environment targeting Python 3.11 explicitly: `py -3.11 -m venv .venv` followed by `pip install -r requirements.txt`)*
+
 #### Step 3: Launch the FastAPI Backend Server
-> **Important:** Always include `--app-dir src` so Uvicorn resolves the `biotrace` module correctly:
+> **Important:** With the virtual environment activated, always include `--app-dir src` so Uvicorn resolves the `biotrace` module correctly:
 
 ```powershell
-# Inside ai-engine/ with virtual environment activated:
+# Inside ai-engine/ with .venv activated:
 python -m uvicorn biotrace.main:app --app-dir src --host 127.0.0.1 --port 8000
+
+# Or execute directly via the virtualenv without activating:
+.\.venv\Scripts\python.exe -m uvicorn biotrace.main:app --app-dir src --host 127.0.0.1 --port 8000
 ```
 Swagger UI will be live at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 

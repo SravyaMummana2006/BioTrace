@@ -27,6 +27,7 @@ public class BioTraceMainFrame extends JFrame {
     private final transient List<NavButton> navButtons = new ArrayList<>();
     private final JLabel engineStatusBadge;
     private final JLabel memoryStatusLabel;
+    private transient Timer healthCheckTimer;
 
     public BioTraceMainFrame(ClientConfig config,
                              ForensicApiClient apiClient,
@@ -262,10 +263,21 @@ public class BioTraceMainFrame extends JFrame {
         // Asynchronous Health Check for Header Status
         checkHeaderEngineHealth(apiClient);
 
+        // Continuous Health Check every 3 seconds to keep UI header badge synchronized
+        healthCheckTimer = new Timer(3000, e -> {
+            checkHeaderEngineHealth(apiClient);
+            memoryStatusLabel.setText(getMemoryUsageString());
+        });
+        healthCheckTimer.setRepeats(true);
+        healthCheckTimer.start();
+
         // Graceful window closing listener
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                if (healthCheckTimer != null) {
+                    healthCheckTimer.stop();
+                }
                 orchestrator.shutdown();
             }
         });

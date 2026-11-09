@@ -7,8 +7,12 @@ param(
 $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-if (-not $scriptDir) { $scriptDir = Get-Location }
-$rootDir = $scriptDir
+if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+if ((Split-Path -Leaf $scriptDir) -eq "scripts") {
+    $rootDir = Split-Path -Parent $scriptDir
+} else {
+    $rootDir = $scriptDir
+}
 $clientDir = Join-Path $rootDir "java-client"
 $pomFile = Join-Path $clientDir "pom.xml"
 
@@ -58,9 +62,9 @@ if ($mvnCmd) {
     Write-Host "Executing via system Maven..." -ForegroundColor Yellow
     & mvn @phases
 } elseif (Test-Path $runMvnScript) {
-    Write-Host "Executing via bundled Maven wrapper..." -ForegroundColor Yellow
-    & powershell -ExecutionPolicy Bypass -File $runMvnScript -f $pomFile @phases
+    Write-Host "Executing via embedded Maven runner..." -ForegroundColor Yellow
+    & powershell -ExecutionPolicy Bypass -File $runMvnScript @phases
 } else {
-    Write-Host "Error: Neither Maven nor scripts/run_mvn.ps1 was found." -ForegroundColor Red
+    Write-Host "Error: Maven not found on system and $runMvnScript missing." -ForegroundColor Red
     exit 1
 }
