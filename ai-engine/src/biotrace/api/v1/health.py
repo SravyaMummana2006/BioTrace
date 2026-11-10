@@ -25,6 +25,13 @@ def get_health_status(
     uptime = round(time.time() - START_TIME, 2)
     cuda_available = torch.cuda.is_available()
 
+    active_jobs = 0
+    try:
+        if job_manager:
+            active_jobs = job_manager.get_active_job_count()
+    except Exception:
+        active_jobs = 0
+
     return HealthStatus(
         status="healthy",
         version=settings.version,
@@ -32,7 +39,7 @@ def get_health_status(
         python_version=sys.version.split()[0],
         torch_version=torch.__version__,
         cuda_available=cuda_available,
-        active_jobs=job_manager.get_active_job_count(),
+        active_jobs=active_jobs,
         worker_threads=settings.worker_threads,
         supported_modalities=[m.value for m in ForensicModality],
     )

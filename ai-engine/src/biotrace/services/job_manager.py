@@ -36,12 +36,6 @@ class JobManager:
         evidence_fusion_engine: Optional[Any] = None,
         visual_detector: Optional[Any] = None,
     ):
-        from biotrace.evidence_fusion.fusion_engine import MultimodalEvidenceFusionEngine
-        from biotrace.facial_dynamics.extractor import FacialDynamicsExtractor
-        from biotrace.rppg.extractor import RPPGSignalExtractor
-        from biotrace.spatial_consistency.extractor import SpatialConsistencyExtractor
-        from biotrace.visual_detection.inference import VisualDeepfakeDetector
-
         self.settings = settings
         self.inspector = inspector
         self._lock = threading.Lock()
@@ -56,13 +50,73 @@ class JobManager:
         self._custom_spatial_consistency_extractor = spatial_consistency_extractor
         self._custom_evidence_fusion_engine = evidence_fusion_engine
         self._custom_visual_detector = visual_detector
-        self.rppg_extractor = rppg_extractor or RPPGSignalExtractor()
-        self.facial_dynamics_extractor = facial_dynamics_extractor or FacialDynamicsExtractor()
-        self.spatial_consistency_extractor = (
-            spatial_consistency_extractor or SpatialConsistencyExtractor()
-        )
-        self.evidence_fusion_engine = evidence_fusion_engine or MultimodalEvidenceFusionEngine()
-        self.visual_detector = visual_detector or VisualDeepfakeDetector()
+
+        # Lazy extractors to prevent synchronous C++ / PyTorch contention during FastAPI DI
+        self._lazy_rppg_extractor = rppg_extractor
+        self._lazy_facial_dynamics_extractor = facial_dynamics_extractor
+        self._lazy_spatial_consistency_extractor = spatial_consistency_extractor
+        self._lazy_evidence_fusion_engine = evidence_fusion_engine
+        self._lazy_visual_detector = visual_detector
+
+    @property
+    def rppg_extractor(self) -> Any:
+        if self._lazy_rppg_extractor is None:
+            from biotrace.rppg.extractor import RPPGSignalExtractor
+            self._lazy_rppg_extractor = RPPGSignalExtractor()
+        return self._lazy_rppg_extractor
+
+    @rppg_extractor.setter
+    def rppg_extractor(self, val: Any) -> None:
+        self._custom_rppg_extractor = val
+        self._lazy_rppg_extractor = val
+
+    @property
+    def facial_dynamics_extractor(self) -> Any:
+        if self._lazy_facial_dynamics_extractor is None:
+            from biotrace.facial_dynamics.extractor import FacialDynamicsExtractor
+            self._lazy_facial_dynamics_extractor = FacialDynamicsExtractor()
+        return self._lazy_facial_dynamics_extractor
+
+    @facial_dynamics_extractor.setter
+    def facial_dynamics_extractor(self, val: Any) -> None:
+        self._custom_facial_dynamics_extractor = val
+        self._lazy_facial_dynamics_extractor = val
+
+    @property
+    def spatial_consistency_extractor(self) -> Any:
+        if self._lazy_spatial_consistency_extractor is None:
+            from biotrace.spatial_consistency.extractor import SpatialConsistencyExtractor
+            self._lazy_spatial_consistency_extractor = SpatialConsistencyExtractor()
+        return self._lazy_spatial_consistency_extractor
+
+    @spatial_consistency_extractor.setter
+    def spatial_consistency_extractor(self, val: Any) -> None:
+        self._custom_spatial_consistency_extractor = val
+        self._lazy_spatial_consistency_extractor = val
+
+    @property
+    def evidence_fusion_engine(self) -> Any:
+        if self._lazy_evidence_fusion_engine is None:
+            from biotrace.evidence_fusion.fusion_engine import MultimodalEvidenceFusionEngine
+            self._lazy_evidence_fusion_engine = MultimodalEvidenceFusionEngine()
+        return self._lazy_evidence_fusion_engine
+
+    @evidence_fusion_engine.setter
+    def evidence_fusion_engine(self, val: Any) -> None:
+        self._custom_evidence_fusion_engine = val
+        self._lazy_evidence_fusion_engine = val
+
+    @property
+    def visual_detector(self) -> Any:
+        if self._lazy_visual_detector is None:
+            from biotrace.visual_detection.inference import VisualDeepfakeDetector
+            self._lazy_visual_detector = VisualDeepfakeDetector()
+        return self._lazy_visual_detector
+
+    @visual_detector.setter
+    def visual_detector(self, val: Any) -> None:
+        self._custom_visual_detector = val
+        self._lazy_visual_detector = val
 
     def submit_job(self, request: JobCreationRequest) -> JobProgress:
         """Schedules a new video analysis job in background worker threads."""
@@ -441,19 +495,34 @@ class JobManager:
         """
         logger.info("Shutting down JobManager worker threads (wait=%s)...", wait)
         self._executor.shutdown(wait=wait)
-        if hasattr(self, "_custom_rppg_extractor") and self._custom_rppg_extractor:
-            self._custom_rppg_extractor.close()
-        elif hasattr(self, "rppg_extractor") and self.rppg_extractor:
-            self.rppg_extractor.close()
-        if hasattr(self, "_custom_facial_dynamics_extractor") and self._custom_facial_dynamics_extractor:
-            self._custom_facial_dynamics_extractor.close()
-        elif hasattr(self, "facial_dynamics_extractor") and self.facial_dynamics_extractor:
-            self.facial_dynamics_extractor.close()
-        if hasattr(self, "_custom_spatial_consistency_extractor") and self._custom_spatial_consistency_extractor:
-            self._custom_spatial_consistency_extractor.close()
-        elif hasattr(self, "spatial_consistency_extractor") and self.spatial_consistency_extractor:
-            self.spatial_consistency_extractor.close()
-        if hasattr(self, "_custom_visual_detector") and self._custom_visual_detector:
-            self._custom_visual_detector.close()
-        elif hasattr(self, "visual_detector") and self.visual_detector:
-            self.visual_detector.close()
+        for attr in ("_custom_rppg_extractor", "_lazy_rppg_extractor"):
+            ext = getattr(self, attr, None)
+            if ext and hasattr(ext, "close"):
+                try:
+                    ext.close()
+                except Exception:
+                    pass
+
+        for attr in ("_custom_facial_dynamics_extractor", "_lazy_facial_dynamics_extractor"):
+            ext = getattr(self, attr, None)
+            if ext and hasattr(ext, "close"):
+                try:
+                    ext.close()
+                except Exception:
+                    pass
+
+        for attr in ("_custom_spatial_consistency_extractor", "_lazy_spatial_consistency_extractor"):
+            ext = getattr(self, attr, None)
+            if ext and hasattr(ext, "close"):
+                try:
+                    ext.close()
+                except Exception:
+                    pass
+
+        for attr in ("_custom_visual_detector", "_lazy_visual_detector"):
+            ext = getattr(self, attr, None)
+            if ext and hasattr(ext, "close"):
+                try:
+                    ext.close()
+                except Exception:
+                    pass

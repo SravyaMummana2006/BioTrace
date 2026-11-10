@@ -17,9 +17,13 @@ from biotrace.explainability.domain import (
 )
 from biotrace.explainability.evidence_explainer import ExplainabilityEngine
 from biotrace.explainability.report_generator import ForensicReportGenerator
+from pathlib import Path
+from biotrace.core.logging import get_logger
 from biotrace.explainability.visual_explainer import GradCamGenerator
 from biotrace.services.job_manager import JobManager
 from biotrace.visual_detection.domain import ModelAvailabilityStatus, VisualDetectionResult
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/jobs", tags=["Forensic Jobs"])
 
@@ -30,13 +34,42 @@ def submit_job(
     job_manager: JobManager = Depends(get_job_manager),
 ) -> JobCreationResponse:
     """Submits a target video for biological & temporal forensic analysis."""
-    job = job_manager.submit_job(request)
-    return JobCreationResponse(
-        job_id=job.job_id,
-        status=job.status,
-        created_at=job.created_at,
-        message="Forensic analysis job submitted successfully and enqueued.",
-    )
+    # Pre-validate file path accessibility before enqueuing
+    target_str = request.video_path.strip()
+    try:
+        target_path = Path(target_str).resolve()
+        try:
+            if not target_path.exists():
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Video media file not found at path: '{target_str}'. Ensure the file exists.",
+                )
+        except PermissionError as pe:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied accessing video path '{target_str}': {pe}. Check Windows folder permissions.",
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning("Could not pre-validate path '%s': %s", target_str, exc)
+
+    try:
+        job = job_manager.submit_job(request)
+        return JobCreationResponse(
+            job_id=job.job_id,
+            status=job.status,
+            created_at=job.created_at,
+            message="Forensic analysis job submitted successfully and enqueued.",
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("JobManager.submit_job failed: %s", exc, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to submit analysis job: {str(exc)}",
+        )
 
 
 @router.get("/{job_id}", response_model=JobProgress)

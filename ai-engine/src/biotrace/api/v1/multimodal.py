@@ -68,11 +68,23 @@ def get_multimodal_info() -> MultimodalSystemInfo:
 @router.post("/analyze", response_model=MultimodalAnalysisReport)
 def analyze_video(request: MultimodalAnalyzeRequest) -> MultimodalAnalysisReport:
     """Executes the complete three-model forensic workflow on the specified target media."""
-    target_path = Path(request.video_path)
-    if not target_path.exists() or not target_path.is_file():
+    target_str = request.video_path.strip()
+    target_path = Path(target_str)
+    try:
+        if not target_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Video file not found: '{target_str}'. Ensure the file exists.",
+            )
+        if not target_path.is_file():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Specified path is not a file: '{target_str}'.",
+            )
+    except PermissionError as pe:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Video file not found: {request.video_path}",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied accessing video file '{target_str}': {pe}. Check Windows file permissions.",
         )
 
     allowed = {".mp4", ".avi", ".mov", ".mkv", ".webm"}

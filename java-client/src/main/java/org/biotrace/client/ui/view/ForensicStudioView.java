@@ -441,6 +441,15 @@ public class ForensicStudioView extends JPanel {
 
     private void selectVideoFile() {
         JFileChooser chooser = new JFileChooser();
+        File datasetsDir = new File("datasets");
+        if (datasetsDir.exists() && datasetsDir.isDirectory()) {
+            chooser.setCurrentDirectory(datasetsDir);
+        } else {
+            File parentDatasets = new File("../datasets");
+            if (parentDatasets.exists() && parentDatasets.isDirectory()) {
+                chooser.setCurrentDirectory(parentDatasets);
+            }
+        }
         chooser.setDialogTitle("Select Target Video for Forensic Analysis");
         int res = chooser.showOpenDialog(this);
         if (res == JFileChooser.APPROVE_OPTION) {
@@ -514,21 +523,29 @@ public class ForensicStudioView extends JPanel {
                         }
                         String errMsg = root.getMessage() != null ? root.getMessage() : root.toString();
                         stageLabel.setText("Pipeline Error: " + errMsg);
-                        verdictBannerLabel.setText("CONNECTION FAILED — ENGINE UNREACHABLE");
                         verdictBannerPanel.setBackground(ForensicTheme.ALERT_BG);
                         verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.ALERT_BORDER, 1));
                         verdictBannerLabel.setForeground(ForensicTheme.ALERT_RED);
 
                         String detailMsg;
                         if (root instanceof org.biotrace.client.core.exception.ApiException apiEx) {
-                            if (apiEx.getStatusCode() == 500) {
-                                detailMsg = "AI Engine reported an internal error (HTTP 500).\nDetails: "
-                                        + (apiEx.getResponseBody() != null ? apiEx.getResponseBody() : apiEx.getMessage());
+                            int code = apiEx.getStatusCode();
+                            if (code == 404) {
+                                verdictBannerLabel.setText("TARGET MEDIA NOT FOUND (HTTP 404)");
+                            } else if (code == 403) {
+                                verdictBannerLabel.setText("MEDIA ACCESS DENIED (HTTP 403)");
+                            } else if (code == 500) {
+                                verdictBannerLabel.setText("PIPELINE EXECUTION ERROR (HTTP 500)");
                             } else {
-                                detailMsg = "AI Engine returned HTTP " + apiEx.getStatusCode() + ".\nResponse: "
-                                        + apiEx.getResponseBody();
+                                verdictBannerLabel.setText("AI ENGINE RETURNED HTTP " + code);
                             }
+
+                            String respBody = apiEx.getResponseBody();
+                            detailMsg = "AI Engine Response (HTTP " + code + "):\n"
+                                    + (respBody != null && !respBody.isBlank() ? respBody : apiEx.getMessage()) + "\n\n"
+                                    + "Please verify that the target media file exists and has read permissions.";
                         } else {
+                            verdictBannerLabel.setText("CONNECTION FAILED — ENGINE UNREACHABLE");
                             detailMsg = "Could not connect to FastAPI Engine on http://127.0.0.1:8000.\n"
                                     + "Please launch the engine first using 'run_backend.bat' or 'scripts/run_backend.ps1'.\n\n"
                                     + "System Error: " + errMsg;

@@ -25,15 +25,40 @@ class VideoInspector:
             VideoFormatError: If extension is unsupported or file size exceeds maximum.
             VideoProcessingError: If video stream cannot be decoded by OpenCV.
         """
-        path = Path(file_path_str).resolve()
+        try:
+            path = Path(file_path_str).resolve()
+            exists = path.exists()
+        except PermissionError as pe:
+            raise VideoProcessingError(
+                f"Access denied reading video file '{file_path_str}': {pe}",
+                details={"path": file_path_str, "permission_error": str(pe)},
+            )
+        except OSError as oe:
+            raise VideoProcessingError(
+                f"OS error accessing video file '{file_path_str}': {oe}",
+                details={"path": file_path_str, "os_error": str(oe)},
+            )
 
-        if not path.exists():
+        if not exists:
             raise VideoProcessingError(
                 f"Video file not found: {file_path_str}",
                 details={"path": file_path_str},
             )
 
-        if not path.is_file():
+        try:
+            is_file = path.is_file()
+        except PermissionError as pe:
+            raise VideoProcessingError(
+                f"Access denied checking file '{file_path_str}': {pe}",
+                details={"path": file_path_str, "permission_error": str(pe)},
+            )
+        except OSError as oe:
+            raise VideoProcessingError(
+                f"OS error checking file '{file_path_str}': {oe}",
+                details={"path": file_path_str, "os_error": str(oe)},
+            )
+
+        if not is_file:
             raise VideoProcessingError(
                 f"Specified path is not a file: {file_path_str}",
                 details={"path": file_path_str},
@@ -48,7 +73,18 @@ class VideoInspector:
             )
 
         # 2. File Size Constraint
-        size_bytes = os.path.getsize(path)
+        try:
+            size_bytes = os.path.getsize(path)
+        except PermissionError as pe:
+            raise VideoProcessingError(
+                f"Access denied reading size of video file '{file_path_str}': {pe}",
+                details={"path": file_path_str, "permission_error": str(pe)},
+            )
+        except OSError as oe:
+            raise VideoProcessingError(
+                f"OS error reading size of video file '{file_path_str}': {oe}",
+                details={"path": file_path_str, "os_error": str(oe)},
+            )
         max_bytes = self.settings.max_video_size_mb * 1024 * 1024
         if size_bytes > max_bytes:
             raise VideoFormatError(

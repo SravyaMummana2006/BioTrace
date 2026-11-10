@@ -59,14 +59,19 @@ public class FinalIntegrationAcceptanceTest {
         if (!ready) {
             Path aiEngineDir = Paths.get("../ai-engine").toAbsolutePath().normalize();
             Path pythonPath = aiEngineDir.resolve("src");
-            String pythonExe = "C:\\Users\\Sravya mummana\\AppData\\Local\\Programs\\Python\\Python311\\python.exe";
-            if (!new File(pythonExe).exists()) {
+            Path venvPy = aiEngineDir.resolve(".venv/Scripts/python.exe");
+            String pythonExe;
+            if (Files.exists(venvPy)) {
+                pythonExe = venvPy.toString();
+            } else if (new File("C:\\Users\\Sravya mummana\\AppData\\Local\\Programs\\Python\\Python311\\python.exe").exists()) {
+                pythonExe = "C:\\Users\\Sravya mummana\\AppData\\Local\\Programs\\Python\\Python311\\python.exe";
+            } else {
                 pythonExe = "python";
             }
 
             ProcessBuilder pb = new ProcessBuilder(
                     pythonExe, "-u", "-m", "uvicorn", "biotrace.main:create_app",
-                    "--factory", "--host", "127.0.0.1",
+                    "--factory", "--app-dir", "src", "--host", "127.0.0.1",
                     "--port", String.valueOf(BACKEND_PORT)
             );
             pb.directory(aiEngineDir.toFile());

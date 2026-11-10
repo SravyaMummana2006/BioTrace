@@ -283,6 +283,14 @@ public class BioTraceMainFrame extends JFrame {
         });
     }
 
+    @Override
+    public void dispose() {
+        if (healthCheckTimer != null) {
+            healthCheckTimer.stop();
+        }
+        super.dispose();
+    }
+
     public JPanel getWorkspaceDeck() {
         return workspaceDeck;
     }
