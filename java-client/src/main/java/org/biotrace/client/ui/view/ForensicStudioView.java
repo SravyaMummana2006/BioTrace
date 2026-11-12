@@ -1,6 +1,7 @@
 package org.biotrace.client.ui.view;
 
 import org.biotrace.client.core.event.EventBus;
+import org.biotrace.client.core.exception.ApiException;
 import org.biotrace.client.model.AnalysisJob;
 import org.biotrace.client.model.JobStatus;
 import org.biotrace.client.model.ModalityVerdict;
@@ -13,6 +14,9 @@ import org.biotrace.client.ui.theme.ForensicTheme;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.net.ConnectException;
+import java.net.http.HttpTimeoutException;
+import java.util.concurrent.CompletionException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +68,7 @@ public class ForensicStudioView extends JPanel {
     private final JLabel physModelDetail;
     private final JLabel fusionModelBadge;
     private final JLabel fusionModelDetail;
+    private final JLabel multimodalNotice;
 
     private long runSequence = 0;
     private volatile AnalysisRun activeRun = null;
@@ -362,6 +367,10 @@ public class ForensicStudioView extends JPanel {
         JPanel centerMetrics = new JPanel(new BorderLayout(0, 6));
         centerMetrics.setOpaque(false);
         centerMetrics.add(structuredModelsPanel, BorderLayout.NORTH);
+        multimodalNotice = new JLabel();
+        multimodalNotice.setFont(ForensicTheme.FONT_BODY);
+        multimodalNotice.setVisible(false);
+        centerMetrics.add(multimodalNotice, BorderLayout.CENTER);
         centerMetrics.add(metricsStrip, BorderLayout.SOUTH);
 
         verdUpper.add(centerMetrics, BorderLayout.CENTER);
@@ -580,6 +589,8 @@ public class ForensicStudioView extends JPanel {
                 });
 
         // Concurrently run unified multimodal verification (Phase 6 Visual + Phase 9 Physiological + Phase 10 Fusion)
+        showMultimodalStatus("Running", "Waiting for scores",
+                "Multimodal models are running separately from the evidence pipeline.", ForensicTheme.TEXT_SECONDARY);
         orchestrator.runMultimodalAnalysis(targetFile.toPath())
                 .thenAccept(json -> SwingUtilities.invokeLater(() -> {
                     if (!isActiveRun(run)) {
@@ -597,7 +608,11 @@ public class ForensicStudioView extends JPanel {
                     applyMultimodalReport(json, run.videoPath);
                 }))
                 .exceptionally(throwable -> {
-                    // Do not fail hard if multimodal service encounters an unhandled edge case
+                    SwingUtilities.invokeLater(() -> {
+                        if (isActiveRun(run) && !run.cancellationConfirmed) {
+                            showMultimodalFailure(throwable);
+                        }
+                    });
                     return null;
                 });
     }
@@ -652,6 +667,8 @@ public class ForensicStudioView extends JPanel {
         run.cancellationRequested = false;
         run.cancellationConfirmed = true;
         run.retainedMultimodalJson = null;
+        showMultimodalStatus("Dismissed", "No scores shown",
+                "Multimodal results were dismissed after cancellation.", ForensicTheme.NEUTRAL_SLATE);
         cancelButton.setEnabled(false);
         analyzeButton.setEnabled(true);
         baselineButton.setEnabled(true);
@@ -987,6 +1004,7 @@ public class ForensicStudioView extends JPanel {
     public SignalWaveformPanel getWaveformPanel() { return waveformPanel; }
 
     public void applyMultimodalReport(String json, String pathStr) {
+        multimodalNotice.setVisible(false);
         String overallVerdict = org.biotrace.client.service.api.JsonHelper.getString(json, "overall_verdict").orElse("UNASSESSED");
         double overallConf = org.biotrace.client.service.api.JsonHelper.getDouble(json, "overall_confidence").orElse(0.0);
         String telemetryState = org.biotrace.client.service.api.JsonHelper.getString(json, "telemetry_state").orElse("SIGNAL_UNAVAILABLE");
@@ -1171,6 +1189,40 @@ public class ForensicStudioView extends JPanel {
             return reportedStatus;
         }
         return isClassified(prediction) ? "COMPLETED" : "UNAVAILABLE";
+    }
+
+    private void showMultimodalFailure(Throwable failure) {
+        Throwable cause = failure;
+        while (cause instanceof CompletionException && cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        if (cause instanceof HttpTimeoutException) {
+            showMultimodalStatus("Timed Out", "No scores received",
+                    "Multimodal analysis exceeded the client timeout. Evidence results can still appear below.",
+                    ForensicTheme.WARNING_AMBER);
+            return;
+        }
+
+        String reason = "Multimodal analysis failed before returning scores.";
+        if (cause instanceof ApiException apiError && apiError.getStatusCode() > 0) {
+            reason = "The engine returned HTTP " + apiError.getStatusCode() + " during multimodal analysis.";
+        } else if (cause instanceof ConnectException) {
+            reason = "Could not connect to the engine for multimodal analysis.";
+        }
+        showMultimodalStatus("Failed", "No scores received", reason, ForensicTheme.WARNING_AMBER);
+    }
+
+    private void showMultimodalStatus(String status, String detail, String notice, Color color) {
+        for (JLabel badge : List.of(visualModelBadge, physModelBadge, fusionModelBadge)) {
+            badge.setText(status);
+            badge.setForeground(color);
+        }
+        for (JLabel label : List.of(visualModelDetail, physModelDetail, fusionModelDetail)) {
+            label.setText(detail);
+        }
+        multimodalNotice.setText(notice);
+        multimodalNotice.setForeground(color);
+        multimodalNotice.setVisible(true);
     }
 
     private void setModelUnavailable(JLabel badge, JLabel detail, String reason) {
