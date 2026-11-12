@@ -170,7 +170,22 @@ Forensic Studio detecting synthetic facial manipulation:
 - Python 3.11–3.13 with pip.
 - Git to clone the repository.
 
-Run the following commands from the repository root.
+### Get BioTrace with Git
+
+For a first-time checkout, run these commands in Windows Command Prompt, PowerShell, or macOS Terminal:
+
+```text
+git clone https://github.com/SravyaMummana2006/BioTrace.git
+cd BioTrace
+```
+
+If you already cloned BioTrace, open a terminal in the BioTrace folder and pull updates:
+
+```text
+git pull --ff-only
+```
+
+Run the setup and launch commands below from the BioTrace folder.
 
 ### Windows
 
