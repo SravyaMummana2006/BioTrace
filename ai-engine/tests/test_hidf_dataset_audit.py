@@ -5,11 +5,15 @@ Validates pairing, non-leakage, split counts, and demographic invariants.
 
 import os
 import csv
+from pathlib import Path
 import pytest
 
-SPLIT_MANIFEST = "protocol_c_split_manifest.csv"
-PAIRING_AUDIT_CSV = "phase4_4_pairing_audit.csv"
-SPLIT_STATS_CSV = "phase4_4_split_statistics.csv"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+REPORTS_DATA = PROJECT_ROOT / "reports" / "data"
+
+SPLIT_MANIFEST = str(REPORTS_DATA / "protocol_c_split_manifest.csv")
+PAIRING_AUDIT_CSV = str(REPORTS_DATA / "phase4_4_pairing_audit.csv")
+SPLIT_STATS_CSV = str(REPORTS_DATA / "phase4_4_split_statistics.csv")
 
 def test_split_manifest_integrity():
     assert os.path.exists(SPLIT_MANIFEST)

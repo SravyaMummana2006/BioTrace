@@ -1,7 +1,7 @@
 # BIOTrace Phase 4 — Acquisition Script Report
 
 **Document:** `phase4_acquisition_script_report.md`  
-**Script Path:** [`scripts/acquire_hidf.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/acquire_hidf.py)  
+**Script Path:** [`scripts/acquire_hidf.py`](../../scripts/acquire_hidf.py)  
 **Author:** Senior Research Data Engineer  
 **Execution Date:** November 4, 2026 (`2026-11-04`)  
 **Status:** IMPLEMENTED, DRY-RUN VERIFIED, AWAITING EXECUTION AUTHORIZATION  
@@ -10,7 +10,7 @@
 
 ## 1. Architectural Design & Safety Safeguards
 
-[`scripts/acquire_hidf.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/acquire_hidf.py) was engineered to meet the highest scientific reproducibility and data integrity standards:
+[`scripts/acquire_hidf.py`](../../scripts/acquire_hidf.py) was engineered to meet the highest scientific reproducibility and data integrity standards:
 
 1. **Staged Single-Archive Selection:**
    - Accepts `--target real`, `--target fake`, or `--target all`. Allows isolating downloads into separate user-approved steps.

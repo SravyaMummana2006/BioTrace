@@ -67,5 +67,5 @@ c:\Users\Sravya mummana\OneDrive\BioTrace\
 │   ├── acquire_hidf.py                  <-- Resumable, verified downloader
 │   ├── extract_hidf.py                  <-- Path-safe, CRC32 verified extractor
 │   └── integrate_hidf.py                <-- Frozen split linking & integrity verifier
-└── protocol_c_split_manifest.csv        <-- Frozen experimental split manifest
+└── ../../reports/data/protocol_c_split_manifest.csv        <-- Frozen experimental split manifest
 ```

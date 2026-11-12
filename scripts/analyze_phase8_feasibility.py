@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-CSV_PATH = "phase8_sample_features.csv"
+CSV_PATH = "reports/data/phase8_sample_features.csv"
 df = pd.read_csv(CSV_PATH)
 
 print("=" * 80)
@@ -220,7 +220,7 @@ def convert_to_serializable(obj):
         return bool(obj)
     return str(obj)
 
-with open("phase8_feasibility_metrics.json", "w") as f:
+with open("reports/data/phase8_feasibility_metrics.json", "w") as f:
     json.dump(analysis_dict, f, indent=2, default=convert_to_serializable)
 
-print("\nAnalysis complete! Metrics saved to phase8_feasibility_metrics.json")
+print("\nAnalysis complete! Metrics saved to reports/data/phase8_feasibility_metrics.json")

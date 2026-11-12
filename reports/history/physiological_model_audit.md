@@ -33,11 +33,11 @@ This read-only audit examined the codebase to determine whether BIOTrace's physi
 
 ### 2.1 Remote Photoplethysmography (rPPG)
 - **Primary Source Files:**
-  - [`ai-engine/src/biotrace/rppg/algorithms.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/rppg/algorithms.py)
-  - [`ai-engine/src/biotrace/rppg/face_tracker.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/rppg/face_tracker.py)
-  - [`ai-engine/src/biotrace/rppg/filtering.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/rppg/filtering.py)
-  - [`ai-engine/src/biotrace/rppg/quality.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/rppg/quality.py)
-  - [`ai-engine/src/biotrace/rppg/extractor.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/rppg/extractor.py)
+  - [`ai-engine/src/biotrace/rppg/algorithms.py`](../../ai-engine/src/biotrace/rppg/algorithms.py)
+  - [`ai-engine/src/biotrace/rppg/face_tracker.py`](../../ai-engine/src/biotrace/rppg/face_tracker.py)
+  - [`ai-engine/src/biotrace/rppg/filtering.py`](../../ai-engine/src/biotrace/rppg/filtering.py)
+  - [`ai-engine/src/biotrace/rppg/quality.py`](../../ai-engine/src/biotrace/rppg/quality.py)
+  - [`ai-engine/src/biotrace/rppg/extractor.py`](../../ai-engine/src/biotrace/rppg/extractor.py)
 - **Mathematical / Algorithmic Basis:**
   - **CHROM** (de Haan & Jeanne 2013): Linear projection of normalized color channels ($X = 3R_n - 2G_n$, $Y = 1.5R_n + G_n - 1.5B_n$, $S = X - \alpha Y$ with $\alpha = \sigma(X) / \sigma(Y)$).
   - **POS** (Wang et al. 2017): Plane-Orthogonal-to-Skin projection matrix to extract pulse signals invariant to specular reflection.
@@ -48,19 +48,19 @@ This read-only audit examined the codebase to determine whether BIOTrace's physi
 - **Is there an actual trained ML/DL model?** **NO.**
 - **Checkpoints / Training Scripts:** None exist.
 - **Dataset / Labels Used:** None. (`UBFC-rPPG` is referenced in template configs, but no dataset files exist on disk).
-- **Are real/fake predictions generated?** **NO.** [`RPPGSignalExtractor.extract()`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/rppg/extractor.py#L216-L224) returns `authenticity_score=None`, `is_authenticity_assessed=False`.
+- **Are real/fake predictions generated?** **NO.** [`RPPGSignalExtractor.extract()`](../../ai-engine/src/biotrace/rppg/extractor.py#L216-L224) returns `authenticity_score=None`, `is_authenticity_assessed=False`.
 - **Video-level performance metrics?** **NO.** No ROC-AUC, EER, or detection metrics exist.
 
 ---
 
 ### 2.2 Eye-Blink Dynamics Detection & Facial Kinematics
 - **Primary Source Files:**
-  - [`ai-engine/src/biotrace/facial_dynamics/landmarks.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/facial_dynamics/landmarks.py)
-  - [`ai-engine/src/biotrace/facial_dynamics/ear.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/facial_dynamics/ear.py)
-  - [`ai-engine/src/biotrace/facial_dynamics/calibration.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/facial_dynamics/calibration.py)
-  - [`ai-engine/src/biotrace/facial_dynamics/blink_detector.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/facial_dynamics/blink_detector.py)
-  - [`ai-engine/src/biotrace/facial_dynamics/temporal_analysis.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/facial_dynamics/temporal_analysis.py)
-  - [`ai-engine/src/biotrace/facial_dynamics/extractor.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/facial_dynamics/extractor.py)
+  - [`ai-engine/src/biotrace/facial_dynamics/landmarks.py`](../../ai-engine/src/biotrace/facial_dynamics/landmarks.py)
+  - [`ai-engine/src/biotrace/facial_dynamics/ear.py`](../../ai-engine/src/biotrace/facial_dynamics/ear.py)
+  - [`ai-engine/src/biotrace/facial_dynamics/calibration.py`](../../ai-engine/src/biotrace/facial_dynamics/calibration.py)
+  - [`ai-engine/src/biotrace/facial_dynamics/blink_detector.py`](../../ai-engine/src/biotrace/facial_dynamics/blink_detector.py)
+  - [`ai-engine/src/biotrace/facial_dynamics/temporal_analysis.py`](../../ai-engine/src/biotrace/facial_dynamics/temporal_analysis.py)
+  - [`ai-engine/src/biotrace/facial_dynamics/extractor.py`](../../ai-engine/src/biotrace/facial_dynamics/extractor.py)
 - **Mathematical / Algorithmic Basis:**
   - **Landmark Tracking:** Google MediaPipe Face Mesh tracking 6 canonical contour points per eye.
   - **Eye Aspect Ratio (EAR):** Soukupová & Čech (2016) formulation in physical pixel Euclidean space:
@@ -73,16 +73,16 @@ This read-only audit examined the codebase to determine whether BIOTrace's physi
 - **Is there an actual trained ML/DL model?** **NO.**
 - **Checkpoints / Training Scripts:** None exist.
 - **Dataset / Labels Used:** None.
-- **Are real/fake predictions generated?** **NO.** [`FacialDynamicsExtractor.extract()`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/facial_dynamics/extractor.py#L383-L391) returns `authenticity_score=None`, `is_authenticity_assessed=False`.
+- **Are real/fake predictions generated?** **NO.** [`FacialDynamicsExtractor.extract()`](../../ai-engine/src/biotrace/facial_dynamics/extractor.py#L383-L391) returns `authenticity_score=None`, `is_authenticity_assessed=False`.
 - **Video-level performance metrics?** **NO.** No detection metrics exist.
 
 ---
 
 ### 2.3 Spatial Biological Consistency Analysis (Complementary Optical Modality)
 - **Primary Source Files:**
-  - [`ai-engine/src/biotrace/spatial_consistency/spatial_analyzer.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/spatial_consistency/spatial_analyzer.py)
-  - [`ai-engine/src/biotrace/spatial_consistency/quality.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/spatial_consistency/quality.py)
-  - [`ai-engine/src/biotrace/spatial_consistency/extractor.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/spatial_consistency/extractor.py)
+  - [`ai-engine/src/biotrace/spatial_consistency/spatial_analyzer.py`](../../ai-engine/src/biotrace/spatial_consistency/spatial_analyzer.py)
+  - [`ai-engine/src/biotrace/spatial_consistency/quality.py`](../../ai-engine/src/biotrace/spatial_consistency/quality.py)
+  - [`ai-engine/src/biotrace/spatial_consistency/extractor.py`](../../ai-engine/src/biotrace/spatial_consistency/extractor.py)
 - **Mathematical / Algorithmic Basis:**
   - Signed Pearson cross-correlation between pulse signals extracted across facial regions (forehead vs. cheeks).
   - Cosine spectral similarity of power spectral densities.
@@ -94,9 +94,9 @@ This read-only audit examined the codebase to determine whether BIOTrace's physi
 
 ### 2.4 Physiological Evidence Fusion
 - **Primary Source Files:**
-  - [`ai-engine/src/biotrace/evidence_fusion/dependency_model.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/evidence_fusion/dependency_model.py)
-  - [`ai-engine/src/biotrace/evidence_fusion/evidence_normalizer.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/evidence_fusion/evidence_normalizer.py)
-  - [`ai-engine/src/biotrace/evidence_fusion/fusion_engine.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/evidence_fusion/fusion_engine.py)
+  - [`ai-engine/src/biotrace/evidence_fusion/dependency_model.py`](../../ai-engine/src/biotrace/evidence_fusion/dependency_model.py)
+  - [`ai-engine/src/biotrace/evidence_fusion/evidence_normalizer.py`](../../ai-engine/src/biotrace/evidence_fusion/evidence_normalizer.py)
+  - [`ai-engine/src/biotrace/evidence_fusion/fusion_engine.py`](../../ai-engine/src/biotrace/evidence_fusion/fusion_engine.py)
 - **Fusion Mechanism:**
   - Does NOT combine model probability predictions.
   - Combines **extracted signal quality flags** and **heuristic discrepancy checks**:
@@ -109,7 +109,7 @@ This read-only audit examined the codebase to determine whether BIOTrace's physi
       - `INSUFFICIENT_EVIDENCE`
 - **Is there an actual trained fusion model?** **NO.** There is no trained fusion network, logistic regression, or learned belief combination.
 - **Does it output an authenticity score?** **NO.**
-  In [`job_manager.py`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/services/job_manager.py#L348-L359):
+  In [`job_manager.py`](../../ai-engine/src/biotrace/services/job_manager.py#L348-L359):
   ```python
   assessed_scores = [v.authenticity_score for v in modality_verdicts if v.is_authenticity_assessed and v.authenticity_score is not None]
   overall_score = float(np.mean(assessed_scores)) if assessed_scores else None
@@ -143,7 +143,7 @@ There are **zero model checkpoints, zero weight files, and zero trained paramete
 | **FaceForensics++** | *Not present on disk* | None | N/A |
 | **Celeb-DF-v2** | *Not present on disk* | None | N/A |
 
-The existing dataset infrastructure consists entirely of the **HiDF video dataset** partitioned under the frozen `protocol_c_split_manifest.csv` (SHA-256: `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`).
+The existing dataset infrastructure consists entirely of the **HiDF video dataset** partitioned under the frozen `../data/protocol_c_split_manifest.csv` (SHA-256: `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`).
 
 ---
 

@@ -112,6 +112,6 @@ To ensure strict scientific reproducibility and preserve forensic integrity:
 
 ## 5. Next Steps for Empirical Data Acquisition
 
-1. Review and approve the licensing and access requirements in [`research/datasets/DATASET_ACCESS_AUDIT.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/research/datasets/DATASET_ACCESS_AUDIT.md).
+1. Review and approve the licensing and access requirements in [`research/datasets/DATASET_ACCESS_AUDIT.md`](../datasets/DATASET_ACCESS_AUDIT.md).
 2. Authorize institutional application submissions for **UBFC-rPPG** (Experiment A) and **FaceForensics++** (Experiments B, D, E).
 3. Upon approval and download to the secure `datasets/` directory, invoke `ManifestBuilder` and `ResearchExperimentRunner` to execute live empirical benchmarks.

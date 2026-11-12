@@ -3,7 +3,7 @@
 **Date:** 2026-11-04  
 **Author:** Senior Computer Vision Engineer & Deepfake Detection Researcher  
 **Status:** Audit Completed — **GO with Empirical Parameter Adaptation**  
-**Dataset Scope:** HiDF Training Partition (`protocol_c_split_manifest.csv`)  
+**Dataset Scope:** HiDF Training Partition (`../data/protocol_c_split_manifest.csv`)  
 **Sample Size:** 200 Videos (100 Authentic Real, 100 Manipulated Fake — 100 Frozen Protocol C Pairs)  
 **Frozen Manifest SHA-256:** `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`  
 
@@ -30,17 +30,17 @@ Prior to sample extraction, the exact callable interfaces and failure behaviors 
 
 | Modality / Component | Primary Class & Module | Inputs | Outputs & Signals | Default Gating Failure Modes |
 | :--- | :--- | :--- | :--- | :--- |
-| **Container & Video** | `VideoInspector` ([`video_inspector.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/services/video_inspector.py)) | Local file path (`str`) | `VideoMetadata` (fps, frame_count, duration, width, height) | File missing, extension unsupported, file size $> 500$MB, OpenCV open failure. |
-| **rPPG Analysis** | `RPPGSignalExtractor` ([`rppg/extractor.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/rppg/extractor.py)) | `video_path`, `VideoMetadata` | `ModalityVerdict` with `ForensicSignal` (POS waveform, SNR, heart rate, grade) | Landmark ratio $< 0.70$ (`TRACKING_DEGRADED`), duration $< 4.0$s (`INSUFFICIENT_DURATION`), SNR $< 1.0$ dB (`LOW_SNR`). |
-| **Facial & Blink Dynamics** | `FacialDynamicsExtractor` ([`facial_dynamics/extractor.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/facial_dynamics/extractor.py)) | `video_path`, `VideoMetadata` | `ModalityVerdict` with `ForensicSignal` (EAR stream, blink counts, duration, velocities) | Face undetected, valid eye landmarks $= 0$, calibration duration $< 3.0$s, head yaw $> 30^\circ$, pitch $> 25^\circ$. |
-| **Spatial Consistency** | `SpatialConsistencyExtractor` ([`spatial_consistency/extractor.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/spatial_consistency/extractor.py)) | `video_path`, `VideoMetadata` | `ModalityVerdict` with `ForensicSignal` (multi-region SNR, cross-correlation, lag) | Observation duration $< 3.0$s (`INSUFFICIENT_DATA`), BPM comparison duration $< 6.0$s (Rayleigh resolution limit). |
+| **Container & Video** | `VideoInspector` ([`video_inspector.py`](../../ai-engine/src/biotrace/services/video_inspector.py)) | Local file path (`str`) | `VideoMetadata` (fps, frame_count, duration, width, height) | File missing, extension unsupported, file size $> 500$MB, OpenCV open failure. |
+| **rPPG Analysis** | `RPPGSignalExtractor` ([`rppg/extractor.py`](../../ai-engine/src/biotrace/rppg/extractor.py)) | `video_path`, `VideoMetadata` | `ModalityVerdict` with `ForensicSignal` (POS waveform, SNR, heart rate, grade) | Landmark ratio $< 0.70$ (`TRACKING_DEGRADED`), duration $< 4.0$s (`INSUFFICIENT_DURATION`), SNR $< 1.0$ dB (`LOW_SNR`). |
+| **Facial & Blink Dynamics** | `FacialDynamicsExtractor` ([`facial_dynamics/extractor.py`](../../ai-engine/src/biotrace/facial_dynamics/extractor.py)) | `video_path`, `VideoMetadata` | `ModalityVerdict` with `ForensicSignal` (EAR stream, blink counts, duration, velocities) | Face undetected, valid eye landmarks $= 0$, calibration duration $< 3.0$s, head yaw $> 30^\circ$, pitch $> 25^\circ$. |
+| **Spatial Consistency** | `SpatialConsistencyExtractor` ([`spatial_consistency/extractor.py`](../../ai-engine/src/biotrace/spatial_consistency/extractor.py)) | `video_path`, `VideoMetadata` | `ModalityVerdict` with `ForensicSignal` (multi-region SNR, cross-correlation, lag) | Observation duration $< 3.0$s (`INSUFFICIENT_DATA`), BPM comparison duration $< 6.0$s (Rayleigh resolution limit). |
 
 ---
 
 ## 2. Experimental Sample Design & Demographics
 
 To ensure scientific validity and absolute freedom from data leakage:
-- **Partition Constraint:** Strict isolation was enforced. Only the `train` partition of `protocol_c_split_manifest.csv` was sampled. Validation and test partitions were untouched.
+- **Partition Constraint:** Strict isolation was enforced. Only the `train` partition of `../data/protocol_c_split_manifest.csv` was sampled. Validation and test partitions were untouched.
 - **Pair Balance:** 100 unique pairs were sampled, generating 100 authentic videos (`data/extracted/hidf/real/{base_id}.mp4`) and 100 manipulated videos (`data/extracted/hidf/fake/{base_id}_{target_id}.mp4`).
 - **Demographic Balance:** Because base donor identities and targets were paired directly, demographic distributions between real and fake samples are identical:
 
@@ -86,7 +86,7 @@ To ensure scientific validity and absolute freedom from data leakage:
 
 ## 4. Missing-Value Profile
 
-Features in [`phase8_sample_features.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase8_sample_features.csv) fall into three distinct missingness categories:
+Features in [`../data/phase8_sample_features.csv`](../data/phase8_sample_features.csv) fall into three distinct missingness categories:
 
 ### 4.1 Low / Zero Missingness Features ($\le 7\%$ Missing) — Candidate Set
 74 features had **0.0% missingness** and 11 features had **$< 7.0\%$ missingness**:
@@ -221,9 +221,9 @@ The following features had zero or near-zero variance across all videos and must
 
 All required Phase 8 artifacts have been produced, verified, and placed under version control:
 
-1. **Feature Data:** [`phase8_sample_features.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase8_sample_features.csv) (200 rows, 101 columns, 100 real, 100 fake, 100% train split).
-2. **Analysis Metrics:** [`phase8_feasibility_metrics.json`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase8_feasibility_metrics.json).
-3. **Reproducible Script:** [`scripts/extract_phase8_feasibility_features.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/extract_phase8_feasibility_features.py).
-4. **Analysis Script:** [`scripts/analyze_phase8_feasibility.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/analyze_phase8_feasibility.py).
-5. **Automated Test Suite:** [`ai-engine/tests/test_phase8_feasibility.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/tests/test_phase8_feasibility.py) (6 passed in $1.88$s).
+1. **Feature Data:** [`../data/phase8_sample_features.csv`](../data/phase8_sample_features.csv) (200 rows, 101 columns, 100 real, 100 fake, 100% train split).
+2. **Analysis Metrics:** [`../data/phase8_feasibility_metrics.json`](../data/phase8_feasibility_metrics.json).
+3. **Reproducible Script:** [`scripts/extract_phase8_feasibility_features.py`](../../scripts/extract_phase8_feasibility_features.py).
+4. **Analysis Script:** [`scripts/analyze_phase8_feasibility.py`](../../scripts/analyze_phase8_feasibility.py).
+5. **Automated Test Suite:** [`ai-engine/tests/test_phase8_feasibility.py`](../../ai-engine/tests/test_phase8_feasibility.py) (6 passed in $1.88$s).
 6. **Full Regression Suite:** 24/24 passed across Phase 6, Phase 7, and Phase 8 in $5.43$s.

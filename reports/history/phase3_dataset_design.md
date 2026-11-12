@@ -25,7 +25,7 @@ Following the completion of the Phase 2.2 zero-download remote archive inspectio
 
 ## Task 1: Audit of Target Donor Reuse
 
-Analyzing the verified pairs in `remote_fake_pair_manifest.csv` reveals the exact frequency distribution of target image donor reuse:
+Analyzing the verified pairs in `../data/remote_fake_pair_manifest.csv` reveals the exact frequency distribution of target image donor reuse:
 
 ### Donor Reuse Distribution
 
@@ -46,7 +46,7 @@ Analyzing the verified pairs in `remote_fake_pair_manifest.csv` reveals the exac
    - Paired Base Videos: `c08256`, `c12797`, `c12803`
    - Generated Fakes: `c08256_f21247.mp4`, `c12797_f21247.mp4`, `c12803_f21247.mp4`
 
-All 122 reused donors are fully cataloged in [`donor_frequency_distribution.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/donor_frequency_distribution.csv).
+All 122 reused donors are fully cataloged in [`../data/donor_frequency_distribution.csv`](../data/donor_frequency_distribution.csv).
 
 ---
 
@@ -174,10 +174,10 @@ Components must be allocated to partitions using greedy bin-packing stratified a
 
 The following Phase 3 deliverables have been generated and validated:
 
-1. [`phase3_dataset_design.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase3_dataset_design.md) (This audit report)
-2. [`donor_frequency_distribution.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/donor_frequency_distribution.csv) ($4$ rows detailing donor reuse rates and percentages)
-3. [`demographic_distribution.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/demographic_distribution.csv) ($10$ rows detailing Gender, Race, and Age proportions)
-4. [`split_feasibility_report.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/split_feasibility_report.csv) ($3$ candidate protocols evaluated against leakage criteria)
+1. [`phase3_dataset_design.md`](phase3_dataset_design.md) (This audit report)
+2. [`../data/donor_frequency_distribution.csv`](../data/donor_frequency_distribution.csv) ($4$ rows detailing donor reuse rates and percentages)
+3. [`../data/demographic_distribution.csv`](../data/demographic_distribution.csv) ($10$ rows detailing Gender, Race, and Age proportions)
+4. [`../data/split_feasibility_report.csv`](../data/split_feasibility_report.csv) ($3$ candidate protocols evaluated against leakage criteria)
 
 ---
 

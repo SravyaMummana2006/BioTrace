@@ -13,7 +13,7 @@ As an independent methodology reviewer, this audit examined the dataset architec
 
 ### Summary of Major Audit Findings
 1. **Numerical Reproduction (Section 1):** Verified the exact count of **$4,361$ real/fake pairs**, **$4,236$ unique donors**, and the component frequency distribution ($4,114$ singletons, $120$ pairs, $1$ triple, $1$ quadruple). Resolved a minor textual ambiguity in early drafts that conflated the $125$ surplus videos with the $122$ unique reused donors.
-2. **Reproducible Protocol C Split (Section 2):** Successfully generated [`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv) using a fixed random seed (`seed=42`). Confirmed **zero base-source leakage** and **zero target-donor leakage** across all partitions (**Train: $3,053$ pairs [70.01%]**, **Val: $654$ pairs [15.00%]**, **Test: $654$ pairs [15.00%]**).
+2. **Reproducible Protocol C Split (Section 2):** Successfully generated [`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv) using a fixed random seed (`seed=42`). Confirmed **zero base-source leakage** and **zero target-donor leakage** across all partitions (**Train: $3,053$ pairs [70.01%]**, **Val: $654$ pairs [15.00%]**, **Test: $654$ pairs [15.00%]**).
 3. **Statistical Power & Minority Group Limitations (Section 3):**
    - The full test set ($N=654$ pairs) achieves high statistical power ($\text{SE} = 0.0107$, $95\%\text{ CI} = [0.829, 0.871]$).
    - In contrast, the tentative $350$-component subset ($N=52$ test pairs) yields an unacceptably wide confidence interval ($\pm 0.075$, width $= 0.150$).
@@ -28,7 +28,7 @@ As an independent methodology reviewer, this audit examined the dataset architec
 
 ## 1. Reproduction of Phase 3 Statistics & Anomaly Audit
 
-All underlying records from `remote_fake_pair_manifest.csv` and `datasets/metadata.csv` were independently parsed and recalculated:
+All underlying records from `../data/remote_fake_pair_manifest.csv` and `datasets/metadata.csv` were independently parsed and recalculated:
 
 ### 1.1 Pair and Donor Census Verification
 - **Total Valid Pairs:** Exactly **$4,361$ pairs** ($4,361$ authentic base videos, $4,361$ deepfake videos).
@@ -42,8 +42,8 @@ All underlying records from `remote_fake_pair_manifest.csv` and `datasets/metada
   - **Sum of Allocated Pairs:** $4,114 + 240 + 3 + 4 = 4,361$ pairs ($100.00\%$).
 
 ### 1.2 Inconsistency Resolution
-- *Discrepancy Noted:* The initial draft of `split_feasibility_report.csv` stated *"125 donors cross partitions if unconstrained"*. 
-- *Correction:* The number of unique reused donors is **$122$** ($120 + 1 + 1$). The number **$125$** represents the *surplus video count* ($4,361\text{ pairs} - 4,236\text{ unique donors} = 125\text{ extra fakes}$). Both `donor_frequency_distribution.csv` and `split_feasibility_report.csv` have been verified and reconciled to reflect $122$ unique reused donors.
+- *Discrepancy Noted:* The initial draft of `../data/split_feasibility_report.csv` stated *"125 donors cross partitions if unconstrained"*. 
+- *Correction:* The number of unique reused donors is **$122$** ($120 + 1 + 1$). The number **$125$** represents the *surplus video count* ($4,361\text{ pairs} - 4,236\text{ unique donors} = 125\text{ extra fakes}$). Both `../data/donor_frequency_distribution.csv` and `../data/split_feasibility_report.csv` have been verified and reconciled to reflect $122$ unique reused donors.
 
 ---
 
@@ -68,11 +68,11 @@ Using a deterministic pseudo-random generator (`seed=42`), all $4,236$ component
 | **Test** | 15.00% | 635 | **654** | 1,308 | **15.00%** | **0** | **0** |
 | **Total** | 100.00% | 4,236 | **4,361** | 8,722 | **100.00%** | **0** | **0** |
 
-The generated manifest is preserved in [`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv) with columns: `base_id, target_id, component_id, split, race, gender, age`.
+The generated manifest is preserved in [`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv) with columns: `base_id, target_id, component_id, split, race, gender, age`.
 
 ### 2.3 Partition Demographic Alignment
 
-As documented in [`protocol_c_demographic_validation.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_demographic_validation.csv), component-level stratification successfully prevents demographic distribution shift:
+As documented in [`../data/protocol_c_demographic_validation.csv`](../data/protocol_c_demographic_validation.csv), component-level stratification successfully prevents demographic distribution shift:
 
 - **Race:**
   - White: Train $78.12\%$, Val $77.68\%$, Test $78.44\%$ (Dataset: $78.10\%$)
@@ -92,7 +92,7 @@ As documented in [`protocol_c_demographic_validation.csv`](file:///c:/Users/Srav
 
 ## 3. Statistical Validity & Methodological Critique
 
-A comprehensive power analysis was performed (see [`protocol_c_statistical_power_analysis.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_statistical_power_analysis.md)):
+A comprehensive power analysis was performed (see [`protocol_c_statistical_power_analysis.md`](protocol_c_statistical_power_analysis.md)):
 
 ### 3.1 Minority Demographic Representation & Power Failure
 - In the full test set ($N=654$ pairs), the sample counts for minority groups are:
@@ -168,17 +168,17 @@ To maintain research integrity in published manuscripts and grant deliverables, 
 
 | File Name | Location | Description |
 | :--- | :--- | :--- |
-| [`phase3_1_methodology_review.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase3_1_methodology_review.md) | Workspace Root | This independent review report. |
-| [`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv) | Workspace Root | $4,361$ rows mapping every pair to `train`/`val`/`test` under Protocol C (`seed=42`). |
-| [`protocol_c_demographic_validation.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_demographic_validation.csv) | Workspace Root | Tabular verification of demographic stratification across partitions. |
-| [`protocol_c_statistical_power_analysis.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_statistical_power_analysis.md) | Workspace Root | Complete Hanley-McNeil derivations, subgroup sample size analysis, and DeLong review. |
+| [`phase3_1_methodology_review.md`](phase3_1_methodology_review.md) | Workspace Root | This independent review report. |
+| [`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv) | Workspace Root | $4,361$ rows mapping every pair to `train`/`val`/`test` under Protocol C (`seed=42`). |
+| [`../data/protocol_c_demographic_validation.csv`](../data/protocol_c_demographic_validation.csv) | Workspace Root | Tabular verification of demographic stratification across partitions. |
+| [`protocol_c_statistical_power_analysis.md`](protocol_c_statistical_power_analysis.md) | Workspace Root | Complete Hanley-McNeil derivations, subgroup sample size analysis, and DeLong review. |
 
 ---
 
 ## Conclusions & Final Recommendations
 
 ### 1. Corrected Primary Experimental Protocol
-- **Dataset Splitting:** Adopt [`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv) ($3,053$ train, $654$ val, $654$ test pairs) generated with seed 42.
+- **Dataset Splitting:** Adopt [`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv) ($3,053$ train, $654$ val, $654$ test pairs) generated with seed 42.
 - **Experiment E Structure:** Split into **Track E.1** (rPPG signal accuracy on UBFC-Phys against 64 Hz BVP) and **Track E.2** (deepfake classification on a dual-class benchmark).
 - **Statistical Testing:** Use Clustered DeLong or stratified paired bootstrap for model comparisons; use Wilcoxon signed-rank test for paired differential analysis.
 

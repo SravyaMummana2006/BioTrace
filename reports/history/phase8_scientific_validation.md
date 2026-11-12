@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-04  
 **Evaluator:** Senior Research Data Engineer & Forensic Computer Vision Architect  
-**Dataset Scope:** HiDF Training Partition (`protocol_c_split_manifest.csv`)  
+**Dataset Scope:** HiDF Training Partition (`../data/protocol_c_split_manifest.csv`)  
 **Sample Inspected:** 200 Videos (100 Authentic Real, 100 Manipulated Fake — 100 Frozen Protocol C Pairs)  
 **Frozen Manifest SHA-256:** `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`  
 **Final Decision:** **CONDITIONAL GO (with Mandatory Feature Exclusions & Protocol Guardrails)**  
@@ -46,7 +46,7 @@ $$\Delta \text{BPM}_{\text{physical}} = \Delta f_{\text{physical}} \times 60 = 0
 > Components closer than $20.3\text{ BPM}$ cannot be physically resolved as distinct spectral peaks. If an individual has a true heart rate of $72\text{ BPM}$, the physical Rayleigh bin encompasses the entire range from $[62\text{ BPM}, 82\text{ BPM}]$. 
 
 ### 1.3 Physical Resolution vs. Zero-Padded DTFT Grid Interpolation
-In `compute_welch_psd` ([`filtering.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/rppg/filtering.py#L122)), the FFT length is zero-padded to `nfft = max(2048, nperseg * 4) = 2048`.
+In `compute_welch_psd` ([`filtering.py`](../../ai-engine/src/biotrace/rppg/filtering.py#L122)), the FFT length is zero-padded to `nfft = max(2048, nperseg * 4) = 2048`.
 This zero-padding evaluates the Discrete-Time Fourier Transform (DTFT) on a dense grid with spacing:
 $$\delta f_{\text{grid}} = \frac{f_s}{N_{\text{fft}}} = \frac{24.0\text{ Hz}}{2048} = 0.0117\text{ Hz} \equiv \mathbf{0.703\text{ BPM}}$$
 
@@ -137,7 +137,7 @@ $$q_{(i)} = \min_{k \ge i} \left( \frac{m}{k} p_{(k)} \right)$$
 ## 4. Dataset Pairing, Leakage & Confounding Audit
 
 ### 4.1 Sample Integrity & Pairing Verification
-- **Manifest Verification:** The 200 videos in [`phase8_sample_features.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase8_sample_features.csv) strictly match the first 100 rows of the frozen `protocol_c_split_manifest.csv` filtered by `split == 'train'`.
+- **Manifest Verification:** The 200 videos in [`../data/phase8_sample_features.csv`](../data/phase8_sample_features.csv) strictly match the first 100 rows of the frozen `../data/protocol_c_split_manifest.csv` filtered by `split == 'train'`.
 - **Identity Disjointness:** No validation or test partition videos were included.
 - **1-to-1 Base Identity Pairing:** The 100 real videos and 100 fake videos share the **exact same 100 base identities** (`c00003`, `c00004`, etc.). Each fake video is a face-swapped version of its corresponding real video using a donor target from the training set.
 
@@ -218,7 +218,7 @@ Full-dataset extraction and baseline classifier training are approved under the 
 ## 7. Artifact Summary
 
 The quantitative evidence supporting this validation is persisted in:
-- Validation Statistics JSON: [`phase8_validation_stats.json`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase8_validation_stats.json)
-- Validation Execution Script: [`scripts/validate_phase8_scientific.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/validate_phase8_scientific.py)
-- Sample Features Dataset: [`phase8_sample_features.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase8_sample_features.csv)
-- Phase 8 Feasibility Report: [`phase8_feasibility_report.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase8_feasibility_report.md)
+- Validation Statistics JSON: [`../data/phase8_validation_stats.json`](../data/phase8_validation_stats.json)
+- Validation Execution Script: [`scripts/validate_phase8_scientific.py`](../../scripts/validate_phase8_scientific.py)
+- Sample Features Dataset: [`../data/phase8_sample_features.csv`](../data/phase8_sample_features.csv)
+- Phase 8 Feasibility Report: [`phase8_feasibility_report.md`](phase8_feasibility_report.md)

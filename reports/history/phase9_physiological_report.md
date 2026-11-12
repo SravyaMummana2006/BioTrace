@@ -3,13 +3,13 @@
 **Date:** 2026-11-04  
 **Author:** Senior Deep Learning Engineer & Deepfake Detection Researcher  
 **Status:** Completed & Evaluated  
-**Dataset Scope:** HiDF Full Protocol C Partitions (`protocol_c_split_manifest.csv`)  
+**Dataset Scope:** HiDF Full Protocol C Partitions (`../data/protocol_c_split_manifest.csv`)  
 **Dataset Size:** 8,722 Videos (4,361 Real / 4,361 Fake Pairs)  
 **Frozen Manifest SHA-256:** `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`  
-**Best Model Checkpoint:** [`ai-engine/models/physiological/best_model.joblib`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/models/physiological/best_model.joblib)  
-**Preprocessor Pipeline:** [`ai-engine/models/physiological/preprocessor.joblib`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/models/physiological/preprocessor.joblib)  
-**Feature Dataset:** [`phase9_physiological_features.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase9_physiological_features.csv)  
-**Metrics JSON:** [`phase9_metrics.json`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase9_metrics.json)  
+**Best Model Checkpoint:** [`ai-engine/models/physiological/best_model.joblib`](../../ai-engine/models/physiological/best_model.joblib)  
+**Preprocessor Pipeline:** [`ai-engine/models/physiological/preprocessor.joblib`](../../ai-engine/models/physiological/preprocessor.joblib)  
+**Feature Dataset:** [`../data/phase9_physiological_features.csv`](../data/phase9_physiological_features.csv)  
+**Metrics JSON:** [`../data/phase9_metrics.json`](../data/phase9_metrics.json)  
 
 ---
 
@@ -39,7 +39,7 @@ All feature extractors were applied to the raw video sequences with strict data 
 
 ## 1. Frozen Dataset Partitions & Audit Compliance
 
-All extractions adhered strictly to the frozen Protocol C manifest (`protocol_c_split_manifest.csv`), ensuring zero identity, demographic, or component leakage between splits:
+All extractions adhered strictly to the frozen Protocol C manifest (`../data/protocol_c_split_manifest.csv`), ensuring zero identity, demographic, or component leakage between splits:
 
 | Split Partition | Authentic Real Videos | Manipulated Fake Videos | Total Videos | Video-Level Pairs | Extraction Success Rate |
 | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -48,7 +48,7 @@ All extractions adhered strictly to the frozen Protocol C manifest (`protocol_c_
 | **Test** | 654 | 654 | 1,308 | 654 | **100.0%** (1,308 / 1,308) |
 | **Total / Global** | **4,361** | **4,361** | **8,722** | **4,361** | **100.0%** (8,722 / 8,722) |
 
-- **Decoding & Processing Reliability:** Across all 8,722 videos processed via 8 parallel worker processes ([`scripts/extract_phase9_features.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/extract_phase9_features.py)), zero OpenCV frame drops, corrupt container failures, or MediaPipe runtime crashes were encountered.
+- **Decoding & Processing Reliability:** Across all 8,722 videos processed via 8 parallel worker processes ([`scripts/extract_phase9_features.py`](../../scripts/extract_phase9_features.py)), zero OpenCV frame drops, corrupt container failures, or MediaPipe runtime crashes were encountered.
 - **Manifest Checksum:** `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7` remained unmodified and verified.
 
 ---
@@ -228,14 +228,14 @@ The complete set of Phase 9 deliverables has been persisted and verified in the 
 
 | Artifact Path | Format | Description |
 | :--- | :--- | :--- |
-| [`phase9_physiological_features.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase9_physiological_features.csv) | CSV (8,722 rows, 18 cols) | Full 10-feature dataset with Protocol C split labels and pair mappings |
-| [`ai-engine/models/physiological/best_model.joblib`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/models/physiological/best_model.joblib) | Joblib Serialized Binary | Locked Random Forest model trained on 6,106 training videos |
-| [`ai-engine/models/physiological/preprocessor.joblib`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/models/physiological/preprocessor.joblib) | Joblib Serialized Binary | Median Imputer + StandardScaler fit strictly on training partition |
-| [`phase9_metrics.json`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase9_metrics.json) | JSON | Machine-readable metrics, split counts, feature importances, and CIs |
-| [`scripts/extract_phase9_features.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/extract_phase9_features.py) | Python Script | Parallelized full-dataset feature extraction pipeline |
-| [`scripts/train_phase9_classifiers.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/train_phase9_classifiers.py) | Python Script | Strict train-only fitting, validation comparison, and test evaluation |
-| [`ai-engine/tests/test_phase9_physiological.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/tests/test_phase9_physiological.py) | Pytest Suite (6 tests) | Regression and integrity verification for all Phase 9 components |
-| [`phase9_physiological_report.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase9_physiological_report.md) | Markdown Report | This comprehensive scientific evaluation report |
+| [`../data/phase9_physiological_features.csv`](../data/phase9_physiological_features.csv) | CSV (8,722 rows, 18 cols) | Full 10-feature dataset with Protocol C split labels and pair mappings |
+| [`ai-engine/models/physiological/best_model.joblib`](../../ai-engine/models/physiological/best_model.joblib) | Joblib Serialized Binary | Locked Random Forest model trained on 6,106 training videos |
+| [`ai-engine/models/physiological/preprocessor.joblib`](../../ai-engine/models/physiological/preprocessor.joblib) | Joblib Serialized Binary | Median Imputer + StandardScaler fit strictly on training partition |
+| [`../data/phase9_metrics.json`](../data/phase9_metrics.json) | JSON | Machine-readable metrics, split counts, feature importances, and CIs |
+| [`scripts/extract_phase9_features.py`](../../scripts/extract_phase9_features.py) | Python Script | Parallelized full-dataset feature extraction pipeline |
+| [`scripts/train_phase9_classifiers.py`](../../scripts/train_phase9_classifiers.py) | Python Script | Strict train-only fitting, validation comparison, and test evaluation |
+| [`ai-engine/tests/test_phase9_physiological.py`](../../ai-engine/tests/test_phase9_physiological.py) | Pytest Suite (6 tests) | Regression and integrity verification for all Phase 9 components |
+| [`phase9_physiological_report.md`](phase9_physiological_report.md) | Markdown Report | This comprehensive scientific evaluation report |
 
 ---
 

@@ -10,11 +10,11 @@
 
 ## Executive Summary
 
-In accordance with Phase 4.2 of the BIOTrace dataset engineering protocol, authentic base video files from `data/raw/hidf/Real-vid.zip` were extracted and comprehensively validated against the frozen experimental split manifest ([`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv)).
+In accordance with Phase 4.2 of the BIOTrace dataset engineering protocol, authentic base video files from `data/raw/hidf/Real-vid.zip` were extracted and comprehensively validated against the frozen experimental split manifest ([`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv)).
 
 All security, isolation, and cryptographic integrity gates passed with zero discrepancies:
 - **Pre-Extraction Archive Verification:** `Real-vid.zip` verified at `842,885,152` bytes, MD5 `ee53b75850a7f54b45d61a78085eda0a`, and SHA-256 `d7ecd565b638e699ac7ec928eae954cc206ca68837a1939587696dbee9ae560c`.
-- **Defensive Extraction Protocol:** Path traversal (ZipSlip) defenses active; all 4,361 members decompressed into a temporary staging directory (`.real_staging`), verified for file size and CRC32 before atomic promotion to [`data/extracted/hidf/real/`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/data/extracted/hidf/real/).
+- **Defensive Extraction Protocol:** Path traversal (ZipSlip) defenses active; all 4,361 members decompressed into a temporary staging directory (`.real_staging`), verified for file size and CRC32 before atomic promotion to [`data/extracted/hidf/real/`](../../data/extracted/hidf/real/).
 - **Member Alignment:** Exactly 4,361 `.mp4` video files extracted ($854,731,837\text{ bytes} \approx 815.14\text{ MB}$). Every extracted file maps 1:1 to the frozen split manifest with 0 missing, 0 unexpected, and 0 duplicate files.
 - **Bit-Level Integrity:** 100% of extracted files match their respective ZIP member CRC32 checksums and file sizes (0 mismatches across 4,361 files).
 - **Strict Quarantine Maintained:** `Fake-vid.zip` was NOT downloaded and no fake videos exist on disk.
@@ -39,7 +39,7 @@ Before initiating extraction, the compressed archive and experimental split were
 
 ## 2. Extraction Architecture & Security Controls
 
-Extraction was conducted using [`scripts/extract_hidf.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/extract_hidf.py) with four defensive safety layers:
+Extraction was conducted using [`scripts/extract_hidf.py`](../../scripts/extract_hidf.py) with four defensive safety layers:
 
 1. **ZipSlip / Path Traversal Defense:**
    - Evaluated via `is_safe_path(target_dir, member_path)` using `os.path.commonpath([resolved_dest, resolved_target])`.
@@ -53,7 +53,7 @@ Extraction was conducted using [`scripts/extract_hidf.py`](file:///c:/Users/Srav
    - Extracted content CRC32 was calculated via `zlib.crc32()` and compared against `member.CRC`.
    - Renamed to `<filename>.mp4` within staging only upon dual confirmation.
 4. **Pre-Promotion Staging Audit & Atomic Promotion:**
-   - Full staging directory validated: verified exactly 4,361 files present, matching all 4,361 base IDs in `protocol_c_split_manifest.csv`.
+   - Full staging directory validated: verified exactly 4,361 files present, matching all 4,361 base IDs in `../data/protocol_c_split_manifest.csv`.
    - Upon 100% staging validation pass, the staging directory was promoted atomically to `data/extracted/hidf/real/`.
 
 ---
@@ -79,7 +79,7 @@ An independent post-extraction audit script verified the extracted assets agains
 
 ### Split Allocation of Extracted Real Videos
 
-Cross-referencing the extracted videos against [`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv):
+Cross-referencing the extracted videos against [`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv):
 
 | Split Partition | Expected Real Videos | Extracted Real Videos | Uncompressed Bytes | Proportion |
 | :--- | :---: | :---: | :---: | :---: |
@@ -105,7 +105,7 @@ Storage headroom remains vast (>198 GB available), fully supporting subsequent f
 
 ## 5. Automated Test Suite Results
 
-A dedicated extraction test suite ([`ai-engine/tests/test_hidf_extraction.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/tests/test_hidf_extraction.py)) was authored and validated against the entire engine test suite:
+A dedicated extraction test suite ([`ai-engine/tests/test_hidf_extraction.py`](../../ai-engine/tests/test_hidf_extraction.py)) was authored and validated against the entire engine test suite:
 
 - `test_is_safe_path_valid`: Validates normal extraction path resolution.
 - `test_is_safe_path_traversal_attacks`: Validates detection and rejection of ZipSlip path traversal payloads (`../`, `../../etc/passwd`, Windows drive injections).
@@ -122,9 +122,9 @@ A dedicated extraction test suite ([`ai-engine/tests/test_hidf_extraction.py`](f
 
 The deliverables for Phase 4.2 have been generated and validated:
 
-1. [`real_video_extraction_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/real_video_extraction_manifest.csv) — 4,361 rows (+ header) mapping every extracted video to base_id, file_size, crc32, split, demographic attributes, validation status, and filesystem path.
-2. [`data/extracted/hidf/extraction_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/data/extracted/hidf/extraction_manifest.csv) — Compatibility manifest inside the extracted dataset tree.
-3. [`phase4_2_real_extraction_report.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase4_2_real_extraction_report.md) — This formal engineering and audit report.
+1. [`../data/real_video_extraction_manifest.csv`](../data/real_video_extraction_manifest.csv) — 4,361 rows (+ header) mapping every extracted video to base_id, file_size, crc32, split, demographic attributes, validation status, and filesystem path.
+2. [`data/extracted/hidf/extraction_manifest.csv`](../../data/extracted/hidf/extraction_manifest.csv) — Compatibility manifest inside the extracted dataset tree.
+3. [`phase4_2_real_extraction_report.md`](phase4_2_real_extraction_report.md) — This formal engineering and audit report.
 
 ---
 
@@ -133,5 +133,5 @@ The deliverables for Phase 4.2 have been generated and validated:
 - [x] **`Fake-vid.zip` not downloaded:** Confirmed absent from filesystem.
 - [x] **No fake videos extracted:** Confirmed `data/extracted/hidf/fake/` does not exist.
 - [x] **No frame extraction or model training executed:** Strict halt enforced.
-- [x] **Frozen split preserved:** `protocol_c_split_manifest.csv` unchanged (`c15300c1...`).
+- [x] **Frozen split preserved:** `../data/protocol_c_split_manifest.csv` unchanged (`c15300c1...`).
 - [x] **Original archive preserved:** `Real-vid.zip` unchanged (`d7ecd565...`).

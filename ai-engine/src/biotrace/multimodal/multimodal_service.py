@@ -54,7 +54,7 @@ P6_CHECKPOINT_PATH = MODELS_DIR / "baseline" / "best_model.pth"
 P9_MODEL_PATH = MODELS_DIR / "physiological" / "best_model.joblib"
 P9_PREPROCESSOR_PATH = MODELS_DIR / "physiological" / "preprocessor.joblib"
 FUSION_MODEL_PATH = MODELS_DIR / "fusion" / "phase10_fusion.joblib"
-METRICS_P9_PATH = PROJECT_ROOT / "phase9_metrics.json"
+METRICS_P9_PATH = PROJECT_ROOT / "reports" / "data" / "phase9_metrics.json"
 
 FROZEN_MANIFEST_SHA256 = "c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7"
 

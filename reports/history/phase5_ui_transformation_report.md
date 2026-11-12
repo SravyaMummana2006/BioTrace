@@ -26,7 +26,7 @@ The BIOTrace desktop user interface has been comprehensively transformed from a 
 
 ## 2. Scientific Workstation Design System (`ForensicTheme.java`)
 
-A centralized, strictly calibrated design token architecture was established in [`ForensicTheme.java`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/java-client/src/main/java/org/biotrace/client/ui/theme/ForensicTheme.java).
+A centralized, strictly calibrated design token architecture was established in [`ForensicTheme.java`](../../java-client/src/main/java/org/biotrace/client/ui/theme/ForensicTheme.java).
 
 ### 2.1 Color Palette & Forensic Semantics
 - **Main Canvas (`BG_CANVAS`):** `#F8F9FA` — Warm, low-fatigue laboratory canvas.

@@ -103,7 +103,7 @@ replay_pid*
 # ------------------------------------------------------------------------------
 # Forensic Media, Datasets & Checkpoints
 # ------------------------------------------------------------------------------
-data/
+/data/
 datasets/*
 !datasets/README.md
 !datasets/.gitkeep

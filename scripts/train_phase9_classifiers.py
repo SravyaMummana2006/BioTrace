@@ -160,9 +160,9 @@ def evaluate_split(
 
 
 def train_and_evaluate_phase9(
-    features_csv: str = "phase9_physiological_features.csv",
+    features_csv: str = "reports/data/phase9_physiological_features.csv",
     output_dir: str = "ai-engine/models/physiological",
-    metrics_json: str = "phase9_metrics.json",
+    metrics_json: str = "reports/data/phase9_metrics.json",
 ) -> Dict[str, Any]:
     """Executes model training, validation selection, and final test evaluation."""
     logger.info("Loading feature dataset from %s...", features_csv)
@@ -341,9 +341,9 @@ def train_and_evaluate_phase9(
 
 def main():
     parser = argparse.ArgumentParser(description="BIOTrace Phase 9 Classifier Training")
-    parser.add_argument("--features-csv", type=str, default="phase9_physiological_features.csv")
+    parser.add_argument("--features-csv", type=str, default="reports/data/phase9_physiological_features.csv")
     parser.add_argument("--output-dir", type=str, default="ai-engine/models/physiological")
-    parser.add_argument("--metrics-json", type=str, default="phase9_metrics.json")
+    parser.add_argument("--metrics-json", type=str, default="reports/data/phase9_metrics.json")
     args = parser.parse_args()
 
     train_and_evaluate_phase9(

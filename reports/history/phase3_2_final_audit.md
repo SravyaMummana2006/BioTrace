@@ -5,36 +5,36 @@
 **Audit Execution Date:** November 3, 2026 (`2026-11-03`)  
 **Status:** COMPLETE — ALL ASSERTIONS VERIFIED & VALIDATED  
 **Primary Deliverables:**
-- [`phase3_2_final_audit.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase3_2_final_audit.md) (This report)
-- [`phase3_2_manifest_validation.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase3_2_manifest_validation.csv) (Machine-checkable validation matrix)
-- [`phase3_2_test_results.txt`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase3_2_test_results.txt) (Deterministic test execution log)
+- [`phase3_2_final_audit.md`](phase3_2_final_audit.md) (This report)
+- [`../data/phase3_2_manifest_validation.csv`](../data/phase3_2_manifest_validation.csv) (Machine-checkable validation matrix)
+- [`phase3_2_test_results.txt`](phase3_2_test_results.txt) (Deterministic test execution log)
 
 ---
 
 ## 1. Investigation of Failed Manifest Verification
 
-During Phase 3.1, an automated check command executed against `protocol_c_split_manifest.csv` returned exit code 1. We audited the exact terminal command, environment, and output to establish the root cause:
+During Phase 3.1, an automated check command executed against `../data/protocol_c_split_manifest.csv` returned exit code 1. We audited the exact terminal command, environment, and output to establish the root cause:
 
 ### 1.1 Root-Cause Analysis
 - **Exact Command Executed:**
   ```powershell
-  python -c "import csv; manifest = list(csv.DictReader(open('protocol_c_split_manifest.csv'))); print('Total manifest rows:', len(manifest)); print('Columns:', manifest[0].keys()); print('Split counts:', Counter(r['split'] for r in manifest))"
+  python -c "import csv; manifest = list(csv.DictReader(open('../data/protocol_c_split_manifest.csv'))); print('Total manifest rows:', len(manifest)); print('Columns:', manifest[0].keys()); print('Split counts:', Counter(r['split'] for r in manifest))"
   ```
 - **Exit Code:** `1`
 - **Stderr Traceback:**
   ```text
   NameError: name 'Counter' is not defined
   ```
-- **Audit Finding:** The failure was caused by an unimported Python class (`Counter` from `collections`) in an inline one-liner shell string. The file `protocol_c_split_manifest.csv` was completely written and intact on disk. When `from collections import Counter` was added, the command succeeded immediately with code 0.
+- **Audit Finding:** The failure was caused by an unimported Python class (`Counter` from `collections`) in an inline one-liner shell string. The file `../data/protocol_c_split_manifest.csv` was completely written and intact on disk. When `from collections import Counter` was added, the command succeeded immediately with code 0.
 
 ### 1.2 Programmatic Manifest File Validation
-To ensure that no latent data defects existed within `protocol_c_split_manifest.csv`, we executed an exhaustive schema and record verification:
+To ensure that no latent data defects existed within `../data/protocol_c_split_manifest.csv`, we executed an exhaustive schema and record verification:
 - **Encoding & Delimiter:** UTF-8 encoded text with standard comma `,` delimiters and CRLF line terminators.
 - **Header Columns:** Exactly `base_id,target_id,component_id,split,race,gender,age` (7 columns).
 - **Row Count:** Exactly $4,361$ data rows ($4,362$ lines including header).
 - **Null / Missing Values:** Exactly $0$ across all $30,527$ data cells.
 - **Duplicate Base IDs:** Exactly $0$ duplicate `base_id` entries.
-- **Pair Identity Verification:** Every `(base_id, target_id)` pair maps $1:1$ to `remote_fake_pair_manifest.csv`.
+- **Pair Identity Verification:** Every `(base_id, target_id)` pair maps $1:1$ to `../data/remote_fake_pair_manifest.csv`.
 - **Authentic Metadata Cross-Check:** Every `base_id` exists in `datasets/metadata.csv` under `(Vid, Base)`, and demographic fields (`race`, `gender`, `age`) exhibit $100.00\%$ concordance.
 - **Verdict:** The manifest is structurally, semantically, and forensically defect-free. No replacement manifest is required.
 
@@ -42,7 +42,7 @@ To ensure that no latent data defects existed within `protocol_c_split_manifest.
 
 ## 2. Independent Split Integrity Verification
 
-We independently reconstructed the bipartite graph $G = (V_{\text{base}}, V_{\text{target}}, E)$ directly from `remote_fake_pair_manifest.csv`:
+We independently reconstructed the bipartite graph $G = (V_{\text{base}}, V_{\text{target}}, E)$ directly from `../data/remote_fake_pair_manifest.csv`:
 
 ### 2.1 Graph Reconstruction Metrics
 - **Base Nodes ($V_{\text{base}}$):** $4,361$ unique nodes, each with $\deg(b) = 1$.
@@ -75,7 +75,7 @@ We independently reconstructed the bipartite graph $G = (V_{\text{base}}, V_{\te
 - Because every pair consists of exactly one authentic base video and exactly one deepfake video synthesized from that base video, demographic proportions are identical whether computed across **pairs ($N=4,361$)**, **authentic base videos ($N=4,361$)**, or **total video files ($N=8,722$)**.
 
 ### 3.2 Explanation of the Female Test Set Variance
-In [`protocol_c_demographic_validation.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_demographic_validation.csv), the proportion of female subjects across partitions is:
+In [`../data/protocol_c_demographic_validation.csv`](../data/protocol_c_demographic_validation.csv), the proportion of female subjects across partitions is:
 - **Global Population:** $1,694 / 4,361 = \mathbf{38.84\%}$
 - **Train Partition:** $1,184 / 3,053 = \mathbf{38.78\%}$ ($-0.06\%$ delta)
 - **Validation Partition:** $268 / 654 = \mathbf{40.98\%}$ ($+2.14\%$ delta)
@@ -159,17 +159,17 @@ To ensure reproducibility, all provenance metadata has been audited:
 - **Python Runtime Environment:** Python `3.11.9` on `Windows 10 / 11 (build 10.0.26200)`.
 - **Deterministic Random Seed:** `42` (used for component-level stratified greedy bin-packing).
 - **Cryptographic Input Hashes (SHA-256):**
-  - `protocol_c_split_manifest.csv`: `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`
+  - `../data/protocol_c_split_manifest.csv`: `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`
   - `datasets/metadata.csv`: `62d49f5abebdefbbe100184ae1408cdc10d824019800881fcf6745493d358db1`
-  - `remote_fake_pair_manifest.csv`: `45e85a3ef456a992d2628c5a07484df203338a925bf222d1395b497e922ff3f4`
-  - `protocol_c_demographic_validation.csv`: `183ce52e9fcf4dc9622d0577a7d425b0cb5aa33ea3e43ee3165b699925695029`
+  - `../data/remote_fake_pair_manifest.csv`: `45e85a3ef456a992d2628c5a07484df203338a925bf222d1395b497e922ff3f4`
+  - `../data/protocol_c_demographic_validation.csv`: `183ce52e9fcf4dc9622d0577a7d425b0cb5aa33ea3e43ee3165b699925695029`
 
 ---
 
 ## Final Review Decisions & Authorizations
 
 ### 1. Is the split manifest trustworthy?
-**YES.** [`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv) is mathematically verified. It contains $4,361$ rows, exactly matching all base and donor pairs with zero missing values, zero duplicates, zero base leakage, and zero donor leakage.
+**YES.** [`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv) is mathematically verified. It contains $4,361$ rows, exactly matching all base and donor pairs with zero missing values, zero duplicates, zero base leakage, and zero donor leakage.
 
 ### 2. Is Protocol C ready for use?
 **YES.** Protocol C guarantees simultaneous isolation of both base video content and target image donor features. It maintains representative demographic stratification across train ($3,053$ pairs), validation ($654$ pairs), and test ($654$ pairs) partitions without discarding any data.

@@ -261,7 +261,7 @@ def train_fusion_model(
 def main():
     parser = argparse.ArgumentParser(description="BIOTrace Phase 10 — Multimodal Fusion Training")
     parser.add_argument("--features-dir", type=str, default="data/cache/features")
-    parser.add_argument("--phys-features", type=str, default="phase9_physiological_features.csv")
+    parser.add_argument("--phys-features", type=str, default="reports/data/phase9_physiological_features.csv")
     parser.add_argument("--p6-checkpoint", type=str, default="ai-engine/models/baseline/best_model.pth")
     parser.add_argument("--p9-model", type=str, default="ai-engine/models/physiological/best_model.joblib")
     parser.add_argument("--p9-preprocessor", type=str, default="ai-engine/models/physiological/preprocessor.joblib")
@@ -278,7 +278,7 @@ def main():
     logger.info("Loading Phase 9 models...")
     p9_prep = joblib.load(args.p9_preprocessor)
     p9_model = joblib.load(args.p9_model)
-    with open("phase9_metrics.json", "r") as f:
+    with open("reports/data/phase9_metrics.json", "r") as f:
         p9_meta = json.load(f)
     approved_features = p9_meta["approved_features"]
 

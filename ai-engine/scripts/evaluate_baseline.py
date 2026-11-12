@@ -224,7 +224,7 @@ def main():
     parser = argparse.ArgumentParser(description="Evaluate BIOTrace baseline deepfake detection model.")
     parser.add_argument("--checkpoint", type=str, default="ai-engine/models/baseline/best_model.pth")
     parser.add_argument("--features-dir", type=str, default="data/cache/features")
-    parser.add_argument("--output", type=str, default="phase6_metrics.json")
+    parser.add_argument("--output", type=str, default="reports/data/phase6_metrics.json")
     parser.add_argument("--device", type=str, default="cpu")
     args = parser.parse_args()
 

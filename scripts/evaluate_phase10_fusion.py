@@ -186,7 +186,7 @@ def main():
     parser = argparse.ArgumentParser(description="BIOTrace Phase 10 — Multimodal Fusion Evaluation")
     parser.add_argument("--fusion-model", type=str, default="ai-engine/models/fusion/phase10_fusion.joblib")
     parser.add_argument("--scores-csv", type=str, default="data/derived/fusion/phase10_multimodal_scores.csv")
-    parser.add_argument("--output-metrics", type=str, default="phase10_metrics.json")
+    parser.add_argument("--output-metrics", type=str, default="reports/data/phase10_metrics.json")
     parser.add_argument("--bootstraps", type=int, default=2000)
     args = parser.parse_args()
 

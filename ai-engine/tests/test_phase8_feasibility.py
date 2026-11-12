@@ -28,10 +28,10 @@ from biotrace.services.video_inspector import VideoInspector
 from biotrace.spatial_consistency.domain import SpatialConsistencyConfig
 
 
-MANIFEST_PATH = str(PROJECT_ROOT / "protocol_c_split_manifest.csv")
+MANIFEST_PATH = str(PROJECT_ROOT / "reports" / "data" / "protocol_c_split_manifest.csv")
 REAL_DIR = str(PROJECT_ROOT / "data" / "extracted" / "hidf" / "real")
 FAKE_DIR = str(PROJECT_ROOT / "data" / "extracted" / "hidf" / "fake")
-FEATURES_CSV = str(PROJECT_ROOT / "phase8_sample_features.csv")
+FEATURES_CSV = str(PROJECT_ROOT / "reports" / "data" / "phase8_sample_features.csv")
 
 
 def test_frozen_manifest_hash_integrity():

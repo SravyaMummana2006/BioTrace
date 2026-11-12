@@ -273,7 +273,7 @@ The repository contains an exhaustive automated test suite covering unit, domain
 cd ai-engine
 python -m pytest tests -q
 ```
-*Verified on macOS Apple Silicon (Python 3.13, MediaPipe 1.2.3): **280 passed, 9 skipped, 14 failed**. The failures require external research artifacts that are intentionally not committed: the HiDF dataset (`data/extracted/hidf`), derived fusion score caches, and the `datasets/test_synthetic.mp4` fixture.*
+*Verified on macOS Apple Silicon (Python 3.13, MediaPipe 1.2.3): **285 passed, 8 skipped, 10 failed**. The remaining failures require external research artifacts that are intentionally not committed: the HiDF dataset (`data/extracted/hidf`), derived fusion score caches, and the historical frozen-manifest digest expectations. The manifest, audit, and metric files themselves resolve from `reports/data/`.*
 
 ### Java Test Suite
 ```bash
@@ -290,8 +290,13 @@ Detailed technical documentation and phase evaluation reports:
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Comprehensive software architecture, service diagrams, and data contracts.
 - [docs/RESEARCH_METHODOLOGY.md](docs/RESEARCH_METHODOLOGY.md) — Protocol C split, bipartite actor isolation, and feature extraction mathematics.
 - [docs/RESULTS_AND_LIMITATIONS.md](docs/RESULTS_AND_LIMITATIONS.md) — Experimental evaluation metrics, bootstrap significance, error interaction analysis, and validity limits.
-- [phase10_fusion_report.md](phase10_fusion_report.md) — Phase 10 multimodal fusion experiment log and full parameter disclosure.
-- [final_application_acceptance_report.md](final_application_acceptance_report.md) — End-to-end integration verification report and UI acceptance checklist.
+- [Phase 10 fusion report](reports/history/phase10_fusion_report.md) — Phase 10 multimodal fusion experiment log and full parameter disclosure.
+- [Final application acceptance report](reports/history/final_application_acceptance_report.md) — End-to-end integration verification report and UI acceptance checklist.
+
+Research artifacts are grouped to keep the repository root focused:
+- `reports/history/` — phase reports, audits, design notes, and verification logs.
+- `reports/data/` — metrics JSON, manifests, distributions, and cryptographic hash records.
+- `reports/screenshots/` — UI evidence figures.
 
 ---
 

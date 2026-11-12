@@ -16,8 +16,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-CSV_PATH = "phase8_sample_features.csv"
-MANIFEST_PATH = "protocol_c_split_manifest.csv"
+CSV_PATH = "reports/data/phase8_sample_features.csv"
+MANIFEST_PATH = "reports/data/protocol_c_split_manifest.csv"
 
 df = pd.read_csv(CSV_PATH)
 manifest_df = pd.read_csv(MANIFEST_PATH)
@@ -157,7 +157,7 @@ validation_summary = {
     "high_corr": [(c1, c2, float(r)) for c1, c2, r in high_corr_pairs],
 }
 
-with open("phase8_validation_stats.json", "w") as f:
+with open("reports/data/phase8_validation_stats.json", "w") as f:
     json.dump(validation_summary, f, indent=2)
 
 print("\nValidation script finished successfully!")

@@ -29,8 +29,8 @@ def verify_file_sha256(filepath: Path) -> str:
 
 
 def run_audit(
-    manifest_csv: str = "phase5_frame_extraction_manifest.csv",
-    frozen_manifest_csv: str = "protocol_c_split_manifest.csv",
+    manifest_csv: str = "reports/data/phase5_frame_extraction_manifest.csv",
+    frozen_manifest_csv: str = "reports/data/protocol_c_split_manifest.csv",
     sample_hash_check_pct: float = 1.0,
 ) -> bool:
     print("=================================================================")
@@ -152,9 +152,9 @@ def run_audit(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="BIOTrace Frame Audit")
-    parser.add_argument("--manifest", type=str, default="phase5_frame_extraction_manifest.csv")
-    parser.add_argument("--frozen-manifest", type=str, default="protocol_c_split_manifest.csv")
-    parser.add_argument("--sample-pct", type=float, default=0.05, help="Fraction of frames to hash-verify on disk (0.05 = 5%)")
+    parser.add_argument("--manifest", type=str, default="reports/data/phase5_frame_extraction_manifest.csv")
+    parser.add_argument("--frozen-manifest", type=str, default="reports/data/protocol_c_split_manifest.csv")
+    parser.add_argument("--sample-pct", type=float, default=0.05, help="Fraction of frames to hash-verify on disk (0.05 = 5%%)")
     args = parser.parse_args()
 
     success = run_audit(args.manifest, args.frozen_manifest, args.sample_pct)

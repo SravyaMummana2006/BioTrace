@@ -26,7 +26,7 @@ In accordance with strict forensic software standards, all model checkpoints, da
 
 | Component | File Path | Expected SHA-256 Digest | Status |
 | :--- | :--- | :--- | :--- |
-| **Protocol C Manifest** | `protocol_c_split_manifest.csv` | `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7` | **MATCH (Locked)** |
+| **Protocol C Manifest** | `../data/protocol_c_split_manifest.csv` | `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7` | **MATCH (Locked)** |
 | **Phase 6 Checkpoint** | `ai-engine/models/baseline/best_model.pth` | `332846ff1479d1f6cdb1313e3247e484ec4a832d5e7c2146fb3a2e0719f29cbc` | **MATCH (Locked)** |
 | **Phase 9 Model** | `ai-engine/models/physiological/best_model.joblib` | `4323cbcc77e387116743c49e2182ca9f83cf2ecf320be485ecf81d114948eb9d` | **MATCH (Locked)** |
 | **Phase 9 Preprocessor**| `ai-engine/models/physiological/preprocessor.joblib`| `e1e247b960579e0bf0a32e18501da86c3d9b04fbb8b15d97f5b357d77b814030` | **MATCH (Locked)** |

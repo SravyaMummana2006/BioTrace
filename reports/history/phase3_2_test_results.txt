@@ -11,11 +11,11 @@ datasets/metadata.csv:
   Hash: 62d49f5abebdefbbe100184ae1408cdc10d824019800881fcf6745493d358db1
   Status: VERIFIED (42,901 rows, 4,361 Vid/Base)
 
-remote_fake_pair_manifest.csv:
+../data/remote_fake_pair_manifest.csv:
   Hash: 45e85a3ef456a992d2628c5a07484df203338a925bf222d1395b497e922ff3f4
   Status: VERIFIED (4,361 pairs, 4,236 donors)
 
-protocol_c_split_manifest.csv:
+../data/protocol_c_split_manifest.csv:
   Hash: c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7
   Status: VERIFIED (4,361 rows, 0 nulls, 0 duplicates)
 

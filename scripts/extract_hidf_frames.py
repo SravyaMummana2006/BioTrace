@@ -188,7 +188,7 @@ def process_single_video(task: Tuple) -> Tuple[List[Dict], Optional[str]]:
 
 def main():
     parser = argparse.ArgumentParser(description="BIOTrace Deterministic Frame Extraction Engine")
-    parser.add_argument("--manifest", type=str, default="protocol_c_split_manifest.csv")
+    parser.add_argument("--manifest", type=str, default="reports/data/protocol_c_split_manifest.csv")
     parser.add_argument("--real-dir", type=str, default="data/extracted/hidf/real")
     parser.add_argument("--fake-dir", type=str, default="data/extracted/hidf/fake")
     parser.add_argument("--output-dir", type=str, default="data/derived/frames")
@@ -198,8 +198,8 @@ def main():
     parser.add_argument("--pilot", action="store_true", help="Run on pilot subset only")
     parser.add_argument("--pilot-count", type=int, default=2, help="Pairs per split for pilot")
     parser.add_argument("--resume", action="store_true", default=True, help="Skip already extracted frames")
-    parser.add_argument("--output-manifest", type=str, default="phase5_frame_extraction_manifest.csv")
-    parser.add_argument("--stats-csv", type=str, default="phase5_extraction_statistics.csv")
+    parser.add_argument("--output-manifest", type=str, default="reports/data/phase5_frame_extraction_manifest.csv")
+    parser.add_argument("--stats-csv", type=str, default="reports/data/phase5_extraction_statistics.csv")
     args = parser.parse_args()
 
     manifest_path = Path(args.manifest)

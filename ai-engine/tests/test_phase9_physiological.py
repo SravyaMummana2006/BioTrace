@@ -33,9 +33,9 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
 
-MANIFEST_PATH = str(PROJECT_ROOT / "protocol_c_split_manifest.csv")
+MANIFEST_PATH = str(PROJECT_ROOT / "reports" / "data" / "protocol_c_split_manifest.csv")
 REAL_SAMPLE = str(PROJECT_ROOT / "data" / "extracted" / "hidf" / "real" / "c00003.mp4")
-OUTPUT_CSV = str(PROJECT_ROOT / "phase9_physiological_features.csv")
+OUTPUT_CSV = str(PROJECT_ROOT / "reports" / "data" / "phase9_physiological_features.csv")
 
 
 def test_approved_features_set_integrity():

@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 
 DEFAULT_RAW_DIR = os.path.join("data", "raw", "hidf")
 DEFAULT_EXTRACTED_DIR = os.path.join("data", "extracted", "hidf")
-DEFAULT_SPLIT_MANIFEST = "protocol_c_split_manifest.csv"
+DEFAULT_SPLIT_MANIFEST = "reports/data/protocol_c_split_manifest.csv"
 
 EXTRACTION_CONFIG = {
     "real": {
@@ -37,7 +37,7 @@ EXTRACTION_CONFIG = {
         "expected_size": 842885152,
         "expected_md5": "ee53b75850a7f54b45d61a78085eda0a",
         "expected_sha256": "d7ecd565b638e699ac7ec928eae954cc206ca68837a1939587696dbee9ae560c",
-        "default_manifest": "real_video_extraction_manifest.csv",
+        "default_manifest": "reports/data/real_video_extraction_manifest.csv",
         "description": "Authentic base videos",
     },
     "fake": {
@@ -47,7 +47,7 @@ EXTRACTION_CONFIG = {
         "expected_size": 715291222,
         "expected_md5": "708890ccaedc3a6cccee0c1d3e64a711",
         "expected_sha256": "a5833c23e0fe98285146f313bcc3ecd9f0af6b098de87aeb775af8960655cd6c",
-        "default_manifest": "fake_video_extraction_manifest.csv",
+        "default_manifest": "reports/data/fake_video_extraction_manifest.csv",
         "description": "Deepfake derivative videos",
     },
 }

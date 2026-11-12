@@ -58,8 +58,8 @@ def test_sampling_indices_edge_cases():
 
 
 def test_frozen_manifest_hash_unaltered():
-    """Verify that protocol_c_split_manifest.csv has not been altered."""
-    manifest_path = Path("protocol_c_split_manifest.csv")
+    """Verify that reports/data/protocol_c_split_manifest.csv has not been altered."""
+    manifest_path = project_root / "reports" / "data" / "protocol_c_split_manifest.csv"
     assert manifest_path.is_file(), "Frozen manifest missing!"
 
     h = hashlib.sha256()
@@ -89,8 +89,8 @@ def test_source_video_directories_intact():
 
 
 def test_frame_manifest_schema_if_present():
-    """If phase5_frame_extraction_manifest.csv is present, verify its columns and integrity."""
-    manifest_path = Path("phase5_frame_extraction_manifest.csv")
+    """If reports/data/phase5_frame_extraction_manifest.csv is present, verify its columns and integrity."""
+    manifest_path = project_root / "reports" / "data" / "phase5_frame_extraction_manifest.csv"
     if not manifest_path.is_file():
         pytest.skip("Full frame extraction manifest not yet generated.")
 

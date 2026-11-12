@@ -11,7 +11,7 @@ Conducts full scientific audit across:
 5. CRC32 and uncompressed size match against ZIP central directories
 6. Leakage audit: zero base ID, target donor, or component overlap across splits
 7. Demographic balance & subgroup counts
-8. Generates phase4_4_pairing_audit.csv and phase4_4_split_statistics.csv
+8. Generates reports/data/phase4_4_pairing_audit.csv and reports/data/phase4_4_split_statistics.csv
 """
 
 import os
@@ -24,7 +24,7 @@ import json
 import shutil
 from collections import defaultdict, Counter
 
-SPLIT_MANIFEST = "protocol_c_split_manifest.csv"
+SPLIT_MANIFEST = "reports/data/protocol_c_split_manifest.csv"
 EXPECTED_SPLIT_SHA256 = "c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7"
 
 REAL_ZIP = os.path.join("data", "raw", "hidf", "Real-vid.zip")
@@ -40,8 +40,8 @@ EXPECTED_FAKE_SHA256 = "a5833c23e0fe98285146f313bcc3ecd9f0af6b098de87aeb775af896
 REAL_EXTRACTED_DIR = os.path.join("data", "extracted", "hidf", "real")
 FAKE_EXTRACTED_DIR = os.path.join("data", "extracted", "hidf", "fake")
 
-PAIRING_AUDIT_CSV = "phase4_4_pairing_audit.csv"
-SPLIT_STATS_CSV = "phase4_4_split_statistics.csv"
+PAIRING_AUDIT_CSV = "reports/data/phase4_4_pairing_audit.csv"
+SPLIT_STATS_CSV = "reports/data/phase4_4_split_statistics.csv"
 
 def compute_hashes(path):
     md5 = hashlib.md5()
@@ -241,7 +241,7 @@ def run_audit():
 
     print("  -> ZERO LEAKAGE across all partitions: PASS")
 
-    # 7. Write phase4_4_pairing_audit.csv
+    # 7. Write reports/data/phase4_4_pairing_audit.csv
     print(f"\n[Step 7] Writing {PAIRING_AUDIT_CSV}...")
     fieldnames = [
         "pair_index", "base_id", "target_id", "component_id", "split",
@@ -256,7 +256,7 @@ def run_audit():
         writer.writerows(pairing_audit_rows)
     print(f"  -> Saved {len(pairing_audit_rows):,} rows to {PAIRING_AUDIT_CSV}")
 
-    # 8. Compute and Write phase4_4_split_statistics.csv
+    # 8. Compute and Write reports/data/phase4_4_split_statistics.csv
     print(f"\n[Step 8] Compiling Split Statistics to {SPLIT_STATS_CSV}...")
     stats_rows = []
     total_pairs = len(manifest_rows)
@@ -338,13 +338,13 @@ def run_audit():
     print("=" * 80)
     print("Discrepancy Analysis:")
     print("  In Phase 4.2 narrative markdown table, values 3,061 (Train), 651 (Val), 649 (Test) were transcribed.")
-    print("  However, the frozen split manifest protocol_c_split_manifest.csv (SHA-256 c15300c1...)")
+    print("  However, the frozen split manifest reports/data/protocol_c_split_manifest.csv (SHA-256 c15300c1...)")
     print("  has ALWAYS contained exactly:")
     print(f"    Train:      {split_counts['train']:,} pairs ({split_counts['train']/total_pairs*100:.3f}%)")
     print(f"    Validation: {split_counts['val']:,} pairs ({split_counts['val']/total_pairs*100:.3f}%)")
     print(f"    Test:       {split_counts['test']:,} pairs ({split_counts['test']/total_pairs*100:.3f}%)")
     print(f"    Total:      {total_pairs:,} pairs (100.000%)")
-    print(f"  Both real_video_extraction_manifest.csv and fake_video_extraction_manifest.csv")
+    print(f"  Both reports/data/real_video_extraction_manifest.csv and reports/data/fake_video_extraction_manifest.csv")
     print("  strictly follow this true 3,053 / 654 / 654 partition count.")
 
     free_bytes = shutil.disk_usage("C:\\").free

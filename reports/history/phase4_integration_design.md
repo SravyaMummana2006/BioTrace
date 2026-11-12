@@ -1,7 +1,7 @@
 # BIOTrace Phase 4 — Dataset Integration Design
 
 **Document:** `phase4_integration_design.md`  
-**Script Path:** [`scripts/integrate_hidf.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/integrate_hidf.py)  
+**Script Path:** [`scripts/integrate_hidf.py`](../../scripts/integrate_hidf.py)  
 **Author:** Senior Research Data Engineer  
 **Execution Date:** November 4, 2026 (`2026-11-04`)  
 **Status:** IMPLEMENTED, DRY-RUN VERIFIED, AWAITING DOWNSTREAM EXECUTION  
@@ -12,12 +12,12 @@
 
 To ensure strict scientific reproducibility and prevent data leakage, dataset integration binds the extracted video files exclusively to the frozen Protocol C split manifest:
 
-- **Frozen Manifest Path:** [`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv)
+- **Frozen Manifest Path:** [`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv)
 - **Immutable Cryptographic Hash (SHA-256):**
   ```text
   c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7
   ```
-- **Integrity Rule:** `scripts/integrate_hidf.py` computes the SHA-256 hash of `protocol_c_split_manifest.csv` prior to processing. If any bit has changed, the script raises an immediate fatal exception.
+- **Integrity Rule:** `scripts/integrate_hidf.py` computes the SHA-256 hash of `../data/protocol_c_split_manifest.csv` prior to processing. If any bit has changed, the script raises an immediate fatal exception.
 
 ---
 
@@ -62,7 +62,7 @@ Pre-flight dry-run execution was performed via `python scripts/integrate_hidf.py
 ======================================================================
 BIOTrace HiDF Dataset Integration — DRY-RUN VERIFICATION
 ======================================================================
-Checking frozen split manifest: protocol_c_split_manifest.csv...
+Checking frozen split manifest: ../data/protocol_c_split_manifest.csv...
 Frozen Split Manifest Verified: SHA-256 MATCH (c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7)
 Total Verified Split Rows: 4,361
 Expected Real Video Directory: data\extracted\hidf\real

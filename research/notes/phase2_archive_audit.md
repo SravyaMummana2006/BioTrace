@@ -10,7 +10,7 @@
 
 ## 1. Archive Location & Local Availability Audit
 
-We conducted an empirical filesystem inspection of the [`datasets/`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/datasets) directory:
+We conducted an empirical filesystem inspection of the [`datasets/`](../../datasets) directory:
 
 ```text
 Filesystem Inspection of datasets/ directory:
@@ -77,7 +77,7 @@ Based on HiDF publication specifications, filenames must conform to a strict for
    *Example:* `c00003_c10578.mp4`, `f001_c01909.mp4`
 
 ### Mandatory Anomaly Gating:
-The inspection pipeline evaluates every archive member against the following anomaly categories (logged to `unmatched_archive_files.csv`):
+The inspection pipeline evaluates every archive member against the following anomaly categories (logged to `../../reports/data/unmatched_archive_files.csv`):
 - **`MULTI_UNDERSCORE`:** Filenames with more than one underscore (e.g. `c00003_c10578_aug0.mp4` or `base_video_01.mp4`).
 - **`NO_UNDERSCORE_IN_FAKE`:** Files in `Fake-vid.zip` that lack an underscore delimiter.
 - **`INVALID_ID_FORMAT`:** Base or target tokens that fail to match the alphanumeric index pattern (`c` + 5 digits or `f` + 3–4 digits).
@@ -126,7 +126,7 @@ To prevent false pairing inferences, a pair is **strictly not marked verified** 
                    ANY GATE FAILS?   ──► pairing_verified = False (Log error_type)
 ```
 
-Every evaluated fake video is exported to `fake_pair_manifest.csv` with explicit Boolean columns for each gate.
+Every evaluated fake video is exported to `../../reports/data/fake_pair_manifest.csv` with explicit Boolean columns for each gate.
 
 ---
 
@@ -137,7 +137,7 @@ For every valid base video $B_i \in (V_{\text{meta}} \cap R_{\text{zip}})$:
   $$k(B_i) = |\{ F \in F_{\text{zip}} \mid \text{prefix}(F) = B_i \land \text{verified}(F) \}|$$
 - **Distribution Modeling:**
   - $N_{\text{clusters}}(k)$: Number of base clusters with exactly $k$ fake derivatives.
-  - Exported to `cluster_degree_distribution.csv`.
+  - Exported to `../../reports/data/cluster_degree_distribution.csv`.
 - **Summary Metrics Computed:**
   $$\text{Mean Degree} = \frac{1}{|V_{\text{paired}}|} \sum_{B_i} k(B_i), \quad \text{Median Degree}, \quad \text{Min Degree}, \quad \text{Max Degree}$$
 
@@ -153,7 +153,7 @@ The Phase 1 audit revealed that:
 
 ### Critical Methodological Invariants:
 * **Target Donor IDs Must Never Group Base Videos:** If face donor `c10578` was swapped onto base video $A$ and also onto base video $B$, base videos $A$ and $B$ **do not belong to the same source cluster**. Grouping must be anchored strictly on the **base video recipient**, because the background, torso, clothing, vocal track, and physical motion belong to the base video.
-* **Downgrade to Source-Video Partitioning:** Because person-level identity is not certified across distinct base videos in HiDF documentation, BIOTrace's [`IdentityAwareSplitter`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/src/biotrace/experiments/splitting.py) must set:
+* **Downgrade to Source-Video Partitioning:** Because person-level identity is not certified across distinct base videos in HiDF documentation, BIOTrace's [`IdentityAwareSplitter`](../../ai-engine/src/biotrace/experiments/splitting.py) must set:
   $$\text{SplitLevel} = \mathbf{SOURCE\_VIDEO\_LEVEL}$$
   *(A claim of `SUBJECT_LEVEL` is scientifically unverified and prohibited).*
 
@@ -164,15 +164,15 @@ The Phase 1 audit revealed that:
 The following 4 deliverables are structured and tracked in the repository:
 
 1. **`phase2_archive_audit.md`** (This formal report)
-2. **`fake_pair_manifest.csv`** (Schema verified, awaiting archive central directory parsing):
+2. **`../../reports/data/fake_pair_manifest.csv`** (Schema verified, awaiting archive central directory parsing):
    ```csv
    fake_filename,base_id,target_id,base_id_in_metadata,base_in_real_zip,target_id_in_metadata,pairing_verified,verification_status
    ```
-3. **`cluster_degree_distribution.csv`** (Schema verified, awaiting archive central directory parsing):
+3. **`../../reports/data/cluster_degree_distribution.csv`** (Schema verified, awaiting archive central directory parsing):
    ```csv
    cluster_degree,num_clusters,total_fake_videos,pct_of_total_clusters
    ```
-4. **`unmatched_archive_files.csv`** (Schema verified, awaiting archive central directory parsing):
+4. **`../../reports/data/unmatched_archive_files.csv`** (Schema verified, awaiting archive central directory parsing):
    ```csv
    archive_name,member_path,filename,error_type,details
    ```
@@ -182,7 +182,7 @@ The following 4 deliverables are structured and tracked in the repository:
 ## Automated Inspection Tool Ready for Execution
 
 To execute this audit automatically the instant `Real-vid.zip` and `Fake-vid.zip` are downloaded into `datasets/`, we have prepared the non-extracting inspection engine at:
-[`scratch/audit_hidf_archives.py`](file:///C:/Users/Sravya%20mummana/.gemini/antigravity/brain/bb895321-584c-489c-b978-cae879a214eb/scratch/audit_hidf_archives.py).
+`scratch/audit_hidf_archives.py`.
 
 ### How to Run:
 Once you place `Real-vid.zip` and `Fake-vid.zip` into `datasets/`, running:

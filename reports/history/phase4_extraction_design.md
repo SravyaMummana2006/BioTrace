@@ -1,7 +1,7 @@
 # BIOTrace Phase 4 — Extraction Design & Security Protocol
 
 **Document:** `phase4_extraction_design.md`  
-**Script Path:** [`scripts/extract_hidf.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/extract_hidf.py)  
+**Script Path:** [`scripts/extract_hidf.py`](../../scripts/extract_hidf.py)  
 **Author:** Senior Research Data Engineer  
 **Execution Date:** November 4, 2026 (`2026-11-04`)  
 **Status:** IMPLEMENTED, DRY-RUN VERIFIED, AWAITING DOWNSTREAM EXECUTION  
@@ -10,7 +10,7 @@
 
 ## 1. Security & Integrity Architecture
 
-Extracting large compressed archives in automated pipelines exposes systems to ZipSlip vulnerabilities, partial extraction corruption, and silent disk pollution. [`scripts/extract_hidf.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/extract_hidf.py) enforces 5 defensive controls:
+Extracting large compressed archives in automated pipelines exposes systems to ZipSlip vulnerabilities, partial extraction corruption, and silent disk pollution. [`scripts/extract_hidf.py`](../../scripts/extract_hidf.py) enforces 5 defensive controls:
 
 1. **Path Traversal Defense (ZipSlip Prevention):**
    - Implements `is_safe_path(target_dir, member_path)` using `os.path.commonpath([resolved_dest, resolved_target])`.

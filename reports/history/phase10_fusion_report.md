@@ -3,11 +3,11 @@
 **Date:** 2026-11-04  
 **Author:** Senior Machine-Learning Research Engineer  
 **Status:** Completed & Empirically Validated  
-**Dataset Scope:** HiDF Full Protocol C Partitions (`protocol_c_split_manifest.csv`)  
+**Dataset Scope:** HiDF Full Protocol C Partitions (`../data/protocol_c_split_manifest.csv`)  
 **Frozen Manifest SHA-256:** `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`  
-**Fusion Model Checkpoint:** [`ai-engine/models/fusion/phase10_fusion.joblib`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/models/fusion/phase10_fusion.joblib)  
-**Multimodal Scores Dataset:** [`data/derived/fusion/phase10_multimodal_scores.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/data/derived/fusion/phase10_multimodal_scores.csv)  
-**Metrics JSON:** [`phase10_metrics.json`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase10_metrics.json)  
+**Fusion Model Checkpoint:** [`ai-engine/models/fusion/phase10_fusion.joblib`](../../ai-engine/models/fusion/phase10_fusion.joblib)  
+**Multimodal Scores Dataset:** [`data/derived/fusion/phase10_multimodal_scores.csv`](../../data/derived/fusion/phase10_multimodal_scores.csv)  
+**Metrics JSON:** [`../data/phase10_metrics.json`](../data/phase10_metrics.json)  
 
 ---
 
@@ -88,7 +88,7 @@ Strict data provenance and split disjointness were maintained throughout:
 
 ```mermaid
 flowchart TD
-    M["Frozen Manifest (protocol_c_split_manifest.csv) SHA-256: c15300..."]
+    M["Frozen Manifest (../data/protocol_c_split_manifest.csv) SHA-256: c15300..."]
     M --> TR["Train Split: 6,106 videos (3,053 pairs)"]
     M --> VA["Val Split: 1,308 videos (654 pairs)"]
     M --> TE["Test Split: 1,308 videos (654 pairs) - FROZEN"]
@@ -197,13 +197,13 @@ Cross-tabulating the predictions of the visual baseline and physiological baseli
 
 | Artifact Path | Format | Description |
 | :--- | :--- | :--- |
-| [`scripts/train_phase10_fusion.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/train_phase10_fusion.py) | Python Script | Training pipeline with strict train-only fitting and validation tuning |
-| [`scripts/evaluate_phase10_fusion.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/evaluate_phase10_fusion.py) | Python Script | Single-pass test evaluation script with paired bootstrap analysis |
-| [`ai-engine/models/fusion/phase10_fusion.joblib`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/models/fusion/phase10_fusion.joblib) | Serialized Binary | Frozen Logistic Regression pipeline + scaler + validation threshold |
-| [`data/derived/fusion/phase10_multimodal_scores.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/data/derived/fusion/phase10_multimodal_scores.csv) | CSV (8,722 rows) | Complete per-video predictions and metadata for train, val, and test |
-| [`phase10_metrics.json`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase10_metrics.json) | JSON | Machine-readable metrics, bootstrap distributions, and confusion matrices |
-| [`ai-engine/tests/test_phase10_fusion.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/tests/test_phase10_fusion.py) | Pytest Suite (6 tests) | Automated regression and validation tests for Phase 10 |
-| [`phase10_fusion_report.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase10_fusion_report.md) | Markdown Report | This comprehensive scientific research deliverable |
+| [`scripts/train_phase10_fusion.py`](../../scripts/train_phase10_fusion.py) | Python Script | Training pipeline with strict train-only fitting and validation tuning |
+| [`scripts/evaluate_phase10_fusion.py`](../../scripts/evaluate_phase10_fusion.py) | Python Script | Single-pass test evaluation script with paired bootstrap analysis |
+| [`ai-engine/models/fusion/phase10_fusion.joblib`](../../ai-engine/models/fusion/phase10_fusion.joblib) | Serialized Binary | Frozen Logistic Regression pipeline + scaler + validation threshold |
+| [`data/derived/fusion/phase10_multimodal_scores.csv`](../../data/derived/fusion/phase10_multimodal_scores.csv) | CSV (8,722 rows) | Complete per-video predictions and metadata for train, val, and test |
+| [`../data/phase10_metrics.json`](../data/phase10_metrics.json) | JSON | Machine-readable metrics, bootstrap distributions, and confusion matrices |
+| [`ai-engine/tests/test_phase10_fusion.py`](../../ai-engine/tests/test_phase10_fusion.py) | Pytest Suite (6 tests) | Automated regression and validation tests for Phase 10 |
+| [`phase10_fusion_report.md`](phase10_fusion_report.md) | Markdown Report | This comprehensive scientific research deliverable |
 
 ---
 

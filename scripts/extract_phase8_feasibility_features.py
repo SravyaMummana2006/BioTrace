@@ -57,7 +57,7 @@ FROZEN_MANIFEST_SHA256 = "c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d
 
 
 def verify_manifest_hash(manifest_path: str) -> None:
-    """Verifies that protocol_c_split_manifest.csv is completely untampered."""
+    """Verifies that reports/data/protocol_c_split_manifest.csv is completely untampered."""
     with open(manifest_path, "rb") as f:
         actual_hash = hashlib.sha256(f.read()).hexdigest()
     if actual_hash != FROZEN_MANIFEST_SHA256:
@@ -676,10 +676,10 @@ def extract_features_single_video(
 
 
 def run_feasibility_extraction(
-    manifest_path: str = "protocol_c_split_manifest.csv",
+    manifest_path: str = "reports/data/protocol_c_split_manifest.csv",
     real_dir: str = "data/extracted/hidf/real",
     fake_dir: str = "data/extracted/hidf/fake",
-    output_csv: str = "phase8_sample_features.csv",
+    output_csv: str = "reports/data/phase8_sample_features.csv",
     num_pairs: int = 100,
 ) -> pd.DataFrame:
     """Executes the full Phase 8 feasibility extraction over the sampled dataset."""
@@ -755,7 +755,7 @@ def main():
     parser.add_argument(
         "--manifest",
         type=str,
-        default="protocol_c_split_manifest.csv",
+        default="reports/data/protocol_c_split_manifest.csv",
         help="Path to Protocol C manifest",
     )
     parser.add_argument(
@@ -779,7 +779,7 @@ def main():
     parser.add_argument(
         "--output-csv",
         type=str,
-        default="phase8_sample_features.csv",
+        default="reports/data/phase8_sample_features.csv",
         help="Output CSV path for extracted features",
     )
     args = parser.parse_args()

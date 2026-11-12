@@ -46,7 +46,7 @@ FROZEN_MANIFEST_SHA256 = "c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d
 
 
 def verify_manifest(manifest_path: str) -> None:
-    """Ensures protocol_c_split_manifest.csv is intact."""
+    """Ensures reports/data/protocol_c_split_manifest.csv is intact."""
     with open(manifest_path, "rb") as f:
         h = hashlib.sha256(f.read()).hexdigest()
     if h != FROZEN_MANIFEST_SHA256:
@@ -261,10 +261,10 @@ def build_full_task_list(
 
 
 def run_full_extraction(
-    manifest_path: str = "protocol_c_split_manifest.csv",
+    manifest_path: str = "reports/data/protocol_c_split_manifest.csv",
     real_dir: str = "data/extracted/hidf/real",
     fake_dir: str = "data/extracted/hidf/fake",
-    output_csv: str = "phase9_physiological_features.csv",
+    output_csv: str = "reports/data/phase9_physiological_features.csv",
     max_workers: int = 8,
     limit: Optional[int] = None,
 ) -> pd.DataFrame:
@@ -358,10 +358,10 @@ def run_full_extraction(
 
 def main():
     parser = argparse.ArgumentParser(description="BIOTrace Phase 9 Full Physiological Extraction")
-    parser.add_argument("--manifest", type=str, default="protocol_c_split_manifest.csv")
+    parser.add_argument("--manifest", type=str, default="reports/data/protocol_c_split_manifest.csv")
     parser.add_argument("--real-dir", type=str, default="data/extracted/hidf/real")
     parser.add_argument("--fake-dir", type=str, default="data/extracted/hidf/fake")
-    parser.add_argument("--output-csv", type=str, default="phase9_physiological_features.csv")
+    parser.add_argument("--output-csv", type=str, default="reports/data/phase9_physiological_features.csv")
     parser.add_argument("--max-workers", type=int, default=8)
     parser.add_argument("--limit", type=int, default=None, help="Optional test limit")
     args = parser.parse_args()

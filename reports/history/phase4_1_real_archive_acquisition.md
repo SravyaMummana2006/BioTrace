@@ -19,7 +19,7 @@ All acquisition and integrity gates passed without exception:
   - **MD5:** `ee53b75850a7f54b45d61a78085eda0a` (Exact match to Zenodo official record).
   - **SHA-256:** `d7ecd565b638e699ac7ec928eae954cc206ca68837a1939587696dbee9ae560c`.
 - **ZIP Archive Health:** `ZipFile.testzip()` verified 100% CRC32 checksums with 0 corrupt members.
-- **Experimental Alignment:** All 4,361 authentic base video members match `protocol_c_split_manifest.csv` and `remote_fake_pair_manifest.csv` with 0 missing, 0 unexpected, 0 duplicates, and 0 malformed filenames.
+- **Experimental Alignment:** All 4,361 authentic base video members match `../data/protocol_c_split_manifest.csv` and `../data/remote_fake_pair_manifest.csv` with 0 missing, 0 unexpected, 0 duplicates, and 0 malformed filenames.
 - **Zero-Payload Extraction Guard:** 100% compliant. No video frames, audio, or MP4 files were decompressed or written to disk.
 
 ---
@@ -32,7 +32,7 @@ In strict adherence to the research project charter, acquisition commenced ONLY 
 | :--- | :--- | :--- | :---: |
 | **User Authorization** | Explicit approval for `Real-vid.zip` | Granted by user | **PASS** |
 | **Target Isolation** | `Real-vid.zip` ONLY (`Fake-vid.zip` prohibited) | Confirmed: target is strictly `real` | **PASS** |
-| **Frozen Manifest Integrity** | `protocol_c_split_manifest.csv` SHA-256 | `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7` | **PASS** |
+| **Frozen Manifest Integrity** | `../data/protocol_c_split_manifest.csv` SHA-256 | `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7` | **PASS** |
 | **Available Disk Space** | $\ge 2.0\text{ GB}$ free on volume | $201.42\text{ GB}$ free ($216,275,542,016\text{ B}$) | **PASS** |
 | **Destination Path** | `data/raw/hidf/Real-vid.zip` | Pre-created and verified clean | **PASS** |
 | **Existing Archive Check** | Skip re-download if valid archive present | Verified initial state (clean start) | **PASS** |
@@ -41,7 +41,7 @@ In strict adherence to the research project charter, acquisition commenced ONLY 
 
 ## 2. Acquisition Telemetry & Download Architecture
 
-The download was executed via [`scripts/acquire_hidf.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/acquire_hidf.py) with the following parameters:
+The download was executed via [`scripts/acquire_hidf.py`](../../scripts/acquire_hidf.py) with the following parameters:
 
 - **Source URL:** `https://zenodo.org/records/16140829/files/Real-vid.zip`
 - **Expected Byte Count:** `842,885,152` bytes (~842.89 MB)
@@ -56,7 +56,7 @@ Acquisition metadata was recorded in `data/raw/hidf/acquisition_log.json`.
 
 ## 3. Post-Acquisition Verification Protocol
 
-Post-acquisition verification was conducted by [`scripts/verify_real_archive.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/verify_real_archive.py) using non-extracting methods:
+Post-acquisition verification was conducted by [`scripts/verify_real_archive.py`](../../scripts/verify_real_archive.py) using non-extracting methods:
 
 ### 3.1 File Size & Hashes
 
@@ -68,7 +68,7 @@ Post-acquisition verification was conducted by [`scripts/verify_real_archive.py`
 | **MD5 Hash** | `ee53b75850a7f54b45d61a78085eda0a` | `ee53b75850a7f54b45d61a78085eda0a` | **PASS** |
 | **SHA-256 Hash** | Calculated & logged | `d7ecd565b638e699ac7ec928eae954cc206ca68837a1939587696dbee9ae560c` | **PASS** |
 
-The SHA-256 hash was permanently recorded in [`real_archive_sha256.txt`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/real_archive_sha256.txt).
+The SHA-256 hash was permanently recorded in [`real_archive_sha256.txt`](../data/real_archive_sha256.txt).
 
 ### 3.2 ZIP Archive Structural Integrity & CRC32
 
@@ -80,7 +80,7 @@ The SHA-256 hash was permanently recorded in [`real_archive_sha256.txt`](file://
 
 ### 3.3 Member Alignment with Frozen Manifest
 
-Every video member in the archive was cross-referenced with `protocol_c_split_manifest.csv` and `remote_fake_pair_manifest.csv`:
+Every video member in the archive was cross-referenced with `../data/protocol_c_split_manifest.csv` and `../data/remote_fake_pair_manifest.csv`:
 
 | Verification Metric | Expected Count | Archive Actual Count | Status |
 | :--- | :---: | :---: | :---: |
@@ -92,7 +92,7 @@ Every video member in the archive was cross-referenced with `protocol_c_split_ma
 | **Duplicate Filenames** | 0 | 0 | **PASS** |
 | **Malformed Filenames** | 0 | 0 | **PASS** |
 
-The item-by-item verification log was written to [`real_archive_integrity_report.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/real_archive_integrity_report.csv) ($4,361$ rows).
+The item-by-item verification log was written to [`../data/real_archive_integrity_report.csv`](../data/real_archive_integrity_report.csv) ($4,361$ rows).
 
 ---
 
@@ -111,10 +111,10 @@ Remaining capacity is more than sufficient for downstream acquisition of `Fake-v
 
 The following artifacts have been generated and validated:
 
-1. [`data/raw/hidf/Real-vid.zip`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/data/raw/hidf/Real-vid.zip) — The cryptographically verified authentic archive ($842,885,152\text{ bytes}$).
-2. [`real_archive_sha256.txt`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/real_archive_sha256.txt) — Official SHA-256 hash record.
-3. [`real_archive_integrity_report.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/real_archive_integrity_report.csv) — 4,361-row audit tracking every member file, uncompressed size, compressed size, CRC32, and manifest alignment.
-4. [`phase4_1_real_archive_acquisition.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase4_1_real_archive_acquisition.md) — This formal audit report.
+1. [`data/raw/hidf/Real-vid.zip`](../../data/raw/hidf/Real-vid.zip) — The cryptographically verified authentic archive ($842,885,152\text{ bytes}$).
+2. [`real_archive_sha256.txt`](../data/real_archive_sha256.txt) — Official SHA-256 hash record.
+3. [`../data/real_archive_integrity_report.csv`](../data/real_archive_integrity_report.csv) — 4,361-row audit tracking every member file, uncompressed size, compressed size, CRC32, and manifest alignment.
+4. [`phase4_1_real_archive_acquisition.md`](phase4_1_real_archive_acquisition.md) — This formal audit report.
 5. `data/raw/hidf/acquisition_log.json` — Telemetry and audit run record.
 6. `scratch/real_archive_summary.json` — Machine-readable summary metrics.
 
@@ -131,4 +131,4 @@ The following artifacts have been generated and validated:
 - [x] **Deliverables created:** PASS (all 3 required files in workspace).
 - [x] **Zero extraction maintained:** PASS (0 video frames decompressed).
 - [x] **Fake archive strictly quarantined:** PASS (`Fake-vid.zip` not acquired).
-- [x] **Experimental split intact:** PASS (`protocol_c_split_manifest.csv` untouched).
+- [x] **Experimental split intact:** PASS (`../data/protocol_c_split_manifest.csv` untouched).

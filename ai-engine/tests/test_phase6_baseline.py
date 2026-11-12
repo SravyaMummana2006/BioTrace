@@ -47,14 +47,14 @@ def project_root() -> Path:
     # Anchor to workspace root
     current = Path(__file__).resolve()
     for parent in [current] + list(current.parents):
-        if (parent / "phase5_frame_extraction_manifest.csv").exists():
+        if (parent / "reports" / "data" / "phase5_frame_extraction_manifest.csv").exists():
             return parent
     return Path.cwd()
 
 
 def test_dataset_loading_and_labels(project_root: Path):
     """Verifies that frame extraction manifest loads cleanly and labels are valid."""
-    manifest_path = project_root / "phase5_frame_extraction_manifest.csv"
+    manifest_path = project_root / "reports" / "data" / "phase5_frame_extraction_manifest.csv"
     assert manifest_path.exists(), f"Manifest file missing: {manifest_path}"
 
     df = pd.read_csv(manifest_path)
@@ -76,7 +76,7 @@ def test_dataset_loading_and_labels(project_root: Path):
 
 def test_split_isolation_and_disjointness(project_root: Path):
     """Verifies that video IDs and components never leak across train, val, and test partitions."""
-    manifest_path = project_root / "phase5_frame_extraction_manifest.csv"
+    manifest_path = project_root / "reports" / "data" / "phase5_frame_extraction_manifest.csv"
     df = pd.read_csv(manifest_path)
 
     train_vids = set(df[df["split"] == "train"]["video_id"].unique())

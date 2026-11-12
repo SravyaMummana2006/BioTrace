@@ -375,7 +375,7 @@ def train_baseline(
 
     # Save training history CSV
     history_df = pd.DataFrame(history)
-    history_path = Path("phase6_training_history.csv")
+    history_path = Path("reports/data/phase6_training_history.csv")
     history_df.to_csv(history_path, index=False)
     print(f"Training history saved to {history_path}")
 

@@ -86,7 +86,7 @@ def extract_split(
 
 def main():
     parser = argparse.ArgumentParser(description="Extract EfficientNet-B0 features for BIOTrace frames.")
-    parser.add_argument("--manifest", type=str, default="phase5_frame_extraction_manifest.csv")
+    parser.add_argument("--manifest", type=str, default="reports/data/phase5_frame_extraction_manifest.csv")
     parser.add_argument("--output-dir", type=str, default="data/cache/features")
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--threads", type=int, default=8)

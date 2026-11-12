@@ -7,7 +7,7 @@ Exhaustively verifies data/raw/hidf/Real-vid.zip post-acquisition:
 - Independent MD5 and SHA-256 computation
 - Non-extracting ZipFile.testzip() CRC validation
 - Filename comparison against authentic base IDs in frozen manifest
-- Generation of real_archive_integrity_report.csv and real_archive_sha256.txt
+- Generation of reports/data/real_archive_integrity_report.csv and reports/data/real_archive_sha256.txt
 """
 
 import os
@@ -22,8 +22,8 @@ from datetime import datetime, timezone
 ARCHIVE_PATH = os.path.join("data", "raw", "hidf", "Real-vid.zip")
 EXPECTED_SIZE = 842885152
 EXPECTED_MD5 = "ee53b75850a7f54b45d61a78085eda0a"
-FROZEN_MANIFEST = "protocol_c_split_manifest.csv"
-REMOTE_PAIR_MANIFEST = "remote_fake_pair_manifest.csv"
+FROZEN_MANIFEST = "reports/data/protocol_c_split_manifest.csv"
+REMOTE_PAIR_MANIFEST = "reports/data/remote_fake_pair_manifest.csv"
 
 def compute_hashes(filepath):
     md5_h = hashlib.md5()
@@ -69,10 +69,10 @@ def run_verification():
         print("ERROR: MD5 checksum verification failed!")
         sys.exit(1)
         
-    # Write real_archive_sha256.txt
-    with open("real_archive_sha256.txt", "w", encoding="utf-8") as f:
+    # Write reports/data/real_archive_sha256.txt
+    with open("reports/data/real_archive_sha256.txt", "w", encoding="utf-8") as f:
         f.write(f"{calc_sha256}  Real-vid.zip\n")
-    print("Wrote real_archive_sha256.txt")
+    print("Wrote reports/data/real_archive_sha256.txt")
     
     # ZIP Integrity and Member Enumeration
     print("\nTesting ZIP archive structure via ZipFile.testzip()...")
@@ -148,8 +148,8 @@ def run_verification():
     print(f"Duplicate Filenames:           {len(duplicate_entries):,}")
     print(f"Malformed Filenames:           {len(malformed_entries):,}")
     
-    # Save real_archive_integrity_report.csv
-    with open("real_archive_integrity_report.csv", "w", newline="", encoding="utf-8") as f:
+    # Save reports/data/real_archive_integrity_report.csv
+    with open("reports/data/real_archive_integrity_report.csv", "w", newline="", encoding="utf-8") as f:
         fieldnames = [
             "filename", "member_path", "base_id", "uncompressed_bytes", 
             "compressed_bytes", "crc32", "in_frozen_manifest", "in_remote_manifest", "status"
@@ -158,7 +158,7 @@ def run_verification():
         writer.writeheader()
         writer.writerows(integrity_rows)
         
-    print(f"Wrote real_archive_integrity_report.csv ({len(integrity_rows):,} rows)")
+    print(f"Wrote reports/data/real_archive_integrity_report.csv ({len(integrity_rows):,} rows)")
     
     # Summary JSON for reporting
     summary = {

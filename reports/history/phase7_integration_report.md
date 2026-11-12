@@ -240,7 +240,7 @@ Executed: `mvn test -o` with JDK 26 and Maven 3.9.6:
 
 ## 8. Final End-to-End Acceptance Testing Results
 
-Final end-to-end acceptance testing was executed via automated JUnit workstation harness ([`Phase7AcceptanceE2ETest.java`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/java-client/src/test/java/org/biotrace/client/service/Phase7AcceptanceE2ETest.java)) operating live against the FastAPI backend on port 8001.
+Final end-to-end acceptance testing was executed via automated JUnit workstation harness ([`Phase7AcceptanceE2ETest.java`](../../java-client/src/test/java/org/biotrace/client/service/Phase7AcceptanceE2ETest.java)) operating live against the FastAPI backend on port 8001.
 
 ### 8.1 Acceptance Test Matrix
 
@@ -298,11 +298,11 @@ EXPERIMENTAL RESEARCH BASELINE: This visual prediction reflects convolutional ar
 
 Both analyses captured workstation UI renders persisted to disk:
 1. Authentic Video Analysis Screenshot:
-   - File Path: [`reports/screenshots/phase7_authentic_analysis.png`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/reports/screenshots/phase7_authentic_analysis.png)
+   - File Path: [`reports/screenshots/phase7_authentic_analysis.png`](../screenshots/phase7_authentic_analysis.png)
    - Size: 8,062 bytes
    - Verification: Verified rendered content pane containing header, telemetry, action controls, metric badges, and verdict.
 2. Manipulated Video Analysis Screenshot:
-   - File Path: [`reports/screenshots/phase7_manipulated_analysis.png`](file:///C:/Users/Sravya%20mummana/OneDrive/BioTrace/reports/screenshots/phase7_manipulated_analysis.png)
+   - File Path: [`reports/screenshots/phase7_manipulated_analysis.png`](../screenshots/phase7_manipulated_analysis.png)
    - Size: 8,062 bytes
    - Verification: Verified rendered content pane with updated target path, scores, and evaluation output.
 

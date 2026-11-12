@@ -4,7 +4,7 @@ BIOTrace Dataset Integration & Integrity Verification Script
 Module: scripts/integrate_hidf.py
 Integrates extracted HiDF video files with the frozen Protocol C split manifest:
 - Validates extracted real (<base_id>.mp4) and fake (<base_id>_<target_id>.mp4) files
-- Assigns partition splits (train/val/test) exclusively from protocol_c_split_manifest.csv
+- Assigns partition splits (train/val/test) exclusively from reports/data/protocol_c_split_manifest.csv
 - Enforces zero base and zero donor leakage
 - Produces data/manifests/hidf_integrity_manifest.csv
 """
@@ -17,7 +17,7 @@ import hashlib
 from datetime import datetime, timezone
 
 DEFAULT_EXTRACTED_DIR = os.path.join("data", "extracted", "hidf")
-DEFAULT_FROZEN_MANIFEST = "protocol_c_split_manifest.csv"
+DEFAULT_FROZEN_MANIFEST = "reports/data/protocol_c_split_manifest.csv"
 DEFAULT_OUTPUT_MANIFEST_DIR = os.path.join("data", "manifests")
 FROZEN_MANIFEST_SHA256 = "c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7"
 

@@ -6,10 +6,10 @@ Module: scripts/verify_fake_archive.py
 Performs independent cryptographic and structural audit on Fake-vid.zip:
 - Verifies exact byte size (715,291,222 bytes)
 - Verifies MD5 checksum against published Zenodo record (1e5057b545d1f8872e42502c38baaa07)
-- Computes SHA-256 and writes fake_archive_sha256.txt
+- Computes SHA-256 and writes reports/data/fake_archive_sha256.txt
 - Runs ZipFile.testzip() CRC32 verification on all compressed members
 - Cross-references 100% of member filenames against frozen Protocol C split manifest
-- Outputs fake_archive_integrity_report.csv
+- Outputs reports/data/fake_archive_integrity_report.csv
 """
 
 import os
@@ -22,10 +22,10 @@ import json
 ARCHIVE_PATH = os.path.join("data", "raw", "hidf", "Fake-vid.zip")
 EXPECTED_SIZE = 715291222
 EXPECTED_MD5 = "708890ccaedc3a6cccee0c1d3e64a711"
-SPLIT_MANIFEST_PATH = "protocol_c_split_manifest.csv"
-REMOTE_PAIR_MANIFEST_PATH = "remote_fake_pair_manifest.csv"
-OUTPUT_INTEGRITY_REPORT = "fake_archive_integrity_report.csv"
-OUTPUT_SHA256_TXT = "fake_archive_sha256.txt"
+SPLIT_MANIFEST_PATH = "reports/data/protocol_c_split_manifest.csv"
+REMOTE_PAIR_MANIFEST_PATH = "reports/data/remote_fake_pair_manifest.csv"
+OUTPUT_INTEGRITY_REPORT = "reports/data/fake_archive_integrity_report.csv"
+OUTPUT_SHA256_TXT = "reports/data/fake_archive_sha256.txt"
 
 def compute_hashes(path):
     md5 = hashlib.md5()

@@ -11,7 +11,7 @@
 
 Phase 5 of the BIOTrace project successfully extracted, standardized, and verified a balanced, leak-free image dataset of **87,220 frames** from all **8,722 audited HiDF videos** ($4,361$ real and $4,361$ deepfake).
 
-The extraction strictly followed the frozen Protocol C bipartite graph partition, guaranteeing **0.0% identity and donor leakage** across train, validation, and test splits. Every frame was resized using area-averaging anti-aliasing (`cv2.INTER_AREA`) to standard CNN dimensions ($224 \times 224$ pixels) and recorded with cryptographic provenance (SHA-256) in [`phase5_frame_extraction_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase5_frame_extraction_manifest.csv).
+The extraction strictly followed the frozen Protocol C bipartite graph partition, guaranteeing **0.0% identity and donor leakage** across train, validation, and test splits. Every frame was resized using area-averaging anti-aliasing (`cv2.INTER_AREA`) to standard CNN dimensions ($224 \times 224$ pixels) and recorded with cryptographic provenance (SHA-256) in [`../data/phase5_frame_extraction_manifest.csv`](../data/phase5_frame_extraction_manifest.csv).
 
 ### Key Performance & Dataset Indicators
 | Metric | Value |
@@ -32,7 +32,7 @@ The extraction strictly followed the frozen Protocol C bipartite graph partition
 ## 2. Ingestion & Frozen Split Integrity
 
 Prior to frame extraction, all baseline dataset assets were independently verified on disk:
-1. **Frozen Split Manifest (`protocol_c_split_manifest.csv`):**
+1. **Frozen Split Manifest (`../data/protocol_c_split_manifest.csv`):**
    - SHA-256: `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7` (bit-for-bit identical to Phase 3/4).
    - Rows: $4,361$ real/fake pairs ($3,053$ train, $654$ validation, $654$ test).
 2. **Authentic Base Videos (`data/extracted/hidf/real/`):**
@@ -66,15 +66,15 @@ Extracted frames are partitioned in `data/derived/frames/` by split and ground-t
 | **Test** | $1,308$ | $13,080$ | $6,540$ | $6,540$ | **1.0000** ($50.0\% / 50.0\%$) | **0.0%** |
 | **Total** | **8,722** | **87,220** | **43,610** | **43,610** | **1.0000** ($50.0\% / 50.0\%$) | **0.0%** |
 
-Full summary statistics are recorded in [`phase5_extraction_statistics.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase5_extraction_statistics.csv).
+Full summary statistics are recorded in [`../data/phase5_extraction_statistics.csv`](../data/phase5_extraction_statistics.csv).
 
 ---
 
 ## 5. Methodological & Integrity Verification (`scripts/audit_phase5_frames.py`)
 
-An exhaustive automated audit was executed using [`scripts/audit_phase5_frames.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/audit_phase5_frames.py). All 7 integrity criteria were satisfied:
+An exhaustive automated audit was executed using [`scripts/audit_phase5_frames.py`](../../scripts/audit_phase5_frames.py). All 7 integrity criteria were satisfied:
 
-1. **Frozen Manifest Immutability:** `protocol_c_split_manifest.csv` hash verified bit-for-bit (`c15300c15...`).
+1. **Frozen Manifest Immutability:** `../data/protocol_c_split_manifest.csv` hash verified bit-for-bit (`c15300c15...`).
 2. **Source Video Traceability:** 100% of the 87,220 frames map to verified existing MP4 videos on disk.
 3. **Uniqueness:** Zero duplicate `frame_id`s and zero duplicate `frame_path`s across the entire dataset.
 4. **Zero Partition Leakage:**
@@ -90,7 +90,7 @@ An exhaustive automated audit was executed using [`scripts/audit_phase5_frames.p
 
 ## 6. Automated Test Suite Outcomes
 
-The automated test suite in `ai-engine/tests` was expanded to include dedicated Phase 5 tests ([`test_phase5_frames.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/tests/test_phase5_frames.py)):
+The automated test suite in `ai-engine/tests` was expanded to include dedicated Phase 5 tests ([`test_phase5_frames.py`](../../ai-engine/tests/test_phase5_frames.py)):
 - `test_sampling_indices_uniform_spacing`: **PASSED** (Monotonic uniform coverage).
 - `test_sampling_indices_short_video`: **PASSED** (Graceful handling of short clips).
 - `test_sampling_indices_edge_cases`: **PASSED** (0 and 1-frame boundaries).
@@ -106,13 +106,13 @@ The automated test suite in `ai-engine/tests` was expanded to include dedicated 
 
 | Deliverable | Path | Description |
 | :--- | :--- | :--- |
-| **Frame Metadata Manifest** | [`phase5_frame_extraction_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase5_frame_extraction_manifest.csv) | Full 87,220-row metadata table with cryptographic SHA-256 digests and Protocol C lineage. |
-| **Extraction Statistics** | [`phase5_extraction_statistics.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase5_extraction_statistics.csv) | Partition-level breakdown of video counts, frame counts, and class balance. |
-| **Sampling Policy Specification** | [`phase5_sampling_policy.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase5_sampling_policy.md) | Mathematical formulation, timestamp calculations, and methodological limitations. |
-| **Extraction Audit Report** | [`phase5_extraction_audit_report.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase5_extraction_audit_report.md) | This document. |
-| **Extraction Script** | [`scripts/extract_hidf_frames.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/extract_hidf_frames.py) | High-throughput, multiprocessing, resumable frame extraction utility. |
-| **Audit Script** | [`scripts/audit_phase5_frames.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/audit_phase5_frames.py) | Automated integrity, partition containment, and cryptographic hash verification script. |
-| **Automated Tests** | [`ai-engine/tests/test_phase5_frames.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/tests/test_phase5_frames.py) | Pytest regression and schema verification tests. |
+| **Frame Metadata Manifest** | [`../data/phase5_frame_extraction_manifest.csv`](../data/phase5_frame_extraction_manifest.csv) | Full 87,220-row metadata table with cryptographic SHA-256 digests and Protocol C lineage. |
+| **Extraction Statistics** | [`../data/phase5_extraction_statistics.csv`](../data/phase5_extraction_statistics.csv) | Partition-level breakdown of video counts, frame counts, and class balance. |
+| **Sampling Policy Specification** | [`phase5_sampling_policy.md`](phase5_sampling_policy.md) | Mathematical formulation, timestamp calculations, and methodological limitations. |
+| **Extraction Audit Report** | [`phase5_extraction_audit_report.md`](phase5_extraction_audit_report.md) | This document. |
+| **Extraction Script** | [`scripts/extract_hidf_frames.py`](../../scripts/extract_hidf_frames.py) | High-throughput, multiprocessing, resumable frame extraction utility. |
+| **Audit Script** | [`scripts/audit_phase5_frames.py`](../../scripts/audit_phase5_frames.py) | Automated integrity, partition containment, and cryptographic hash verification script. |
+| **Automated Tests** | [`ai-engine/tests/test_phase5_frames.py`](../../ai-engine/tests/test_phase5_frames.py) | Pytest regression and schema verification tests. |
 | **Derived Frames Directory** | `data/derived/frames/` | 87,220 standardized $224 \times 224$ JPEG images arranged by `split/label/`. |
 
 ---

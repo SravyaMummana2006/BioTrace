@@ -191,8 +191,8 @@ All artifacts are persisted and verifiable via SHA-256 digests:
 | Artifact | File Path | SHA-256 Digest | Status |
 |---|---|---|:---:|
 | **Best Model Checkpoint** | `ai-engine/models/baseline/best_model.pth` | `332846ff1479d1f6cdb1313e3247e484ec4a832d5e7c2146fb3a2e0719f29cbc` | **VERIFIED** |
-| **Training History CSV** | `phase6_training_history.csv` | `9d554a9fc5d14df1bcad9d2906e57ba56736dd653194a28fc9a2eb2d3269b2be` | **VERIFIED** |
-| **Evaluation Metrics JSON** | `phase6_metrics.json` | `5ec0a5417088b9a2432a2f8c5b045330e6a3f4e24eb3606cf44927cbba03ce4b` | **VERIFIED** |
+| **Training History CSV** | `../data/phase6_training_history.csv` | `9d554a9fc5d14df1bcad9d2906e57ba56736dd653194a28fc9a2eb2d3269b2be` | **VERIFIED** |
+| **Evaluation Metrics JSON** | `../data/phase6_metrics.json` | `5ec0a5417088b9a2432a2f8c5b045330e6a3f4e24eb3606cf44927cbba03ce4b` | **VERIFIED** |
 | **Train Feature Cache** | `data/cache/features/train_features.pt` | `f389808d4b3df5da3141443659cfdfa1a8df063ff39cf5c777e0344d2d48c894` | **VERIFIED** |
 | **Val Feature Cache** | `data/cache/features/val_features.pt` | `2924bf63d41f0a1c6a213e4b78996e8e89f81ca9942a490cf2606553835a6431` | **VERIFIED** |
 | **Test Feature Cache** | `data/cache/features/test_features.pt` | `1da92817ba7efc8623ba9ec5a0b73c7fc0176868dfd05d54988e404be1f8876c` | **VERIFIED** |
@@ -227,7 +227,7 @@ python ai-engine/scripts/train_baseline.py --epochs 10 --batch-size 64 --lr 0.00
 
 ### 10.2 Command to Evaluate Checkpoint (Test Partition)
 ```powershell
-python ai-engine/scripts/evaluate_baseline.py --checkpoint ai-engine/models/baseline/best_model.pth --features-dir data/cache/features --output phase6_metrics.json --device cpu
+python ai-engine/scripts/evaluate_baseline.py --checkpoint ai-engine/models/baseline/best_model.pth --features-dir data/cache/features --output ../data/phase6_metrics.json --device cpu
 ```
 
 ### 10.3 Command to Run Video Inference

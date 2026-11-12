@@ -12,7 +12,7 @@
 To prepare a research-grade, leak-free image dataset from the 8,722 audited HiDF videos ($4,361$ real and $4,361$ fake) for immediate binary classification model training, we establish a deterministic, reproducible, and balanced frame extraction policy.
 
 ### Core Principles
-1. **Zero Partition Leakage:** Frames are strictly partitioned according to `protocol_c_split_manifest.csv` (`c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`).
+1. **Zero Partition Leakage:** Frames are strictly partitioned according to `../data/protocol_c_split_manifest.csv` (`c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`).
 2. **Deterministic Uniform Temporal Coverage:** Rather than clustering frames in the first few seconds or taking random crops, frames are sampled across the entire temporal trajectory of each video clip.
 3. **Exact Class & Pair Balance:** Every real video and its corresponding deepfake derivative are sampled with identical temporal targets ($K = 10$ frames per clip), maintaining an exact 1:1 real-to-fake ratio across train, validation, and test splits.
 4. **Standardized Spatial Dimensions:** Frames are resized to $224 \times 224$ pixels using area-averaging anti-aliasing interpolation (`cv2.INTER_AREA`), matching standard CNN input tensors (ResNet18, EfficientNet-B0) and eliminating on-the-fly resizing latency during GPU/CPU training.
@@ -75,7 +75,7 @@ data/derived/frames/
 
 ---
 
-## 5. Metadata Schema (`phase5_frame_extraction_manifest.csv`)
+## 5. Metadata Schema (`../data/phase5_frame_extraction_manifest.csv`)
 
 Every extracted frame produces an immutable manifest entry with the following 16 attributes:
 

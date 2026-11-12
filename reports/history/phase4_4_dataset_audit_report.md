@@ -13,29 +13,29 @@
 Phase 4.4 conducted an exhaustive, independent scientific audit of the complete HiDF dataset acquired across Phases 4.1 through 4.3. This audit verified the frozen Protocol C experimental design, resolved historical narrative reporting discrepancies, inspected all 4,361 authentic and 4,361 deepfake video files at the bit level, confirmed mathematical zero-leakage partition isolation, and evaluated subgroup demographic distributions.
 
 All 11 audit requirements passed with zero unresolved discrepancies:
-1. **Frozen Manifest Integrity:** [`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv) SHA-256 verified as `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7` (untouched, identical to Phase 3.1 baseline).
+1. **Frozen Manifest Integrity:** [`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv) SHA-256 verified as `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7` (untouched, identical to Phase 3.1 baseline).
 2. **True Partition Counts:** Recomputed directly from manifest:
    - **Train:** Exactly $3,053$ pairs ($3,053$ real, $3,053$ fake = $6,106$ videos, $70.007\%$)
    - **Validation:** Exactly $654$ pairs ($654$ real, $654$ fake = $1,308$ videos, $14.997\%$)
    - **Test:** Exactly $654$ pairs ($654$ real, $654$ fake = $1,308$ videos, $14.997\%$)
    - **Total:** Exactly $4,361$ pairs ($8,722$ videos, $100.000\%$)
-3. **Discrepancy Resolution:** Fully resolved. The figures $3,061 / 651 / 649$ appearing in the narrative markdown table of `phase4_2_real_extraction_report.md` were clerical transcription errors. The manifest generated during Phase 4.2 ([`real_video_extraction_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/real_video_extraction_manifest.csv)) and the frozen split manifest have always contained the true $3,053 / 654 / 654$ counts.
+3. **Discrepancy Resolution:** Fully resolved. The figures $3,061 / 651 / 649$ appearing in the narrative markdown table of `phase4_2_real_extraction_report.md` were clerical transcription errors. The manifest generated during Phase 4.2 ([`../data/real_video_extraction_manifest.csv`](../data/real_video_extraction_manifest.csv)) and the frozen split manifest have always contained the true $3,053 / 654 / 654$ counts.
 4. **Pair-by-Pair Validation:** Exactly 4,361 pairs verified. Every real video (`<base_id>.mp4`) and fake video (`<base_id>_<target_id>.mp4`) exists on disk, shares the identical split and connected component, and matches archive CRC32 checksums and file sizes with 0 discrepancies.
 5. **Zero Leakage:** Proved mathematically and empirically: exactly 0 base IDs, 0 target donors, and 0 connected components overlap across train, validation, or test partitions.
 6. **Demographic Invariants:** Full distribution characterized across Race, Gender, and Age. Minority cohort statistical limitations (Indian $N=13$, Child $N=10$ in test) documented without modifying the split.
-7. **Automated Testing:** Dedicated audit test suite added to [`ai-engine/tests/test_hidf_dataset_audit.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/tests/test_hidf_dataset_audit.py); complete project test suite passed ($254 / 254$ tests passing in 64.97s).
+7. **Automated Testing:** Dedicated audit test suite added to [`ai-engine/tests/test_hidf_dataset_audit.py`](../../ai-engine/tests/test_hidf_dataset_audit.py); complete project test suite passed ($254 / 254$ tests passing in 64.97s).
 8. **Deliverables Generated:**
-   - [`phase4_4_dataset_audit_report.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase4_4_dataset_audit_report.md)
-   - [`phase4_4_pairing_audit.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase4_4_pairing_audit.csv) ($4,361$ rows)
-   - [`phase4_4_split_statistics.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase4_4_split_statistics.csv) ($4$ summary rows)
+   - [`phase4_4_dataset_audit_report.md`](phase4_4_dataset_audit_report.md)
+   - [`../data/phase4_4_pairing_audit.csv`](../data/phase4_4_pairing_audit.csv) ($4,361$ rows)
+   - [`../data/phase4_4_split_statistics.csv`](../data/phase4_4_split_statistics.csv) ($4$ summary rows)
 
 ---
 
 ## 1. Frozen Manifest Verification & True Partition Counts
 
-The experimental partitioning manifest ([`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv)) was parsed and audited:
+The experimental partitioning manifest ([`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv)) was parsed and audited:
 
-- **Filesystem Path:** `protocol_c_split_manifest.csv`
+- **Filesystem Path:** `../data/protocol_c_split_manifest.csv`
 - **Verified SHA-256 Hash:** `c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7`
 - **Total Data Rows:** $4,361$ rows (+ header)
 - **Unique Base Video IDs:** $4,361$ (0 duplicates, 0 nulls)
@@ -65,11 +65,11 @@ A focal requirement of Phase 4.4 was resolving the numerical discrepancy between
 
 ### Root Cause Analysis & Forensic Resolution
 1. **Source Manifest Audit:**
-   The master experimental split file, [`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv), was generated during Phase 3.1 with fixed random seed $42$. Its cryptographic hash (`c15300c1...`) was verified prior to Phase 4.1 download, prior to Phase 4.2 real extraction, prior to Phase 4.3 fake extraction, and in this audit. At no point has the file been regenerated or modified.
+   The master experimental split file, [`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv), was generated during Phase 3.1 with fixed random seed $42$. Its cryptographic hash (`c15300c1...`) was verified prior to Phase 4.1 download, prior to Phase 4.2 real extraction, prior to Phase 4.3 fake extraction, and in this audit. At no point has the file been regenerated or modified.
 2. **Extraction Manifest Inspection:**
-   The programmatic manifest written during Phase 4.2 real extraction ([`real_video_extraction_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/real_video_extraction_manifest.csv)) was loaded and its split column tabulated:
+   The programmatic manifest written during Phase 4.2 real extraction ([`../data/real_video_extraction_manifest.csv`](../data/real_video_extraction_manifest.csv)) was loaded and its split column tabulated:
    ```python
-   # Split counts in real_video_extraction_manifest.csv:
+   # Split counts in ../data/real_video_extraction_manifest.csv:
    {"train": 3053, "val": 654, "test": 654}
    ```
 3. **Conclusion:**
@@ -89,8 +89,8 @@ Both Zenodo source archives and their extracted contents were audited:
 | **Extracted Fake Videos** | $4,361\text{ files}$ | $4,361\text{ files}$ | N/A | N/A | $726,240,367\text{ B}$ | 0 vs ZIP | **PASS** |
 
 - **Double-Hash Verification:**
-  - `Real-vid.zip` SHA-256 logged in [`real_archive_sha256.txt`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/real_archive_sha256.txt): `d7ecd565b638e699ac7ec928eae954cc206ca68837a1939587696dbee9ae560c`.
-  - `Fake-vid.zip` SHA-256 logged in [`fake_archive_sha256.txt`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/fake_archive_sha256.txt): `a5833c23e0fe98285146f313bcc3ecd9f0af6b098de87aeb775af8960655cd6c`.
+  - `Real-vid.zip` SHA-256 logged in [`real_archive_sha256.txt`](../data/real_archive_sha256.txt): `d7ecd565b638e699ac7ec928eae954cc206ca68837a1939587696dbee9ae560c`.
+  - `Fake-vid.zip` SHA-256 logged in [`fake_archive_sha256.txt`](../data/fake_archive_sha256.txt): `a5833c23e0fe98285146f313bcc3ecd9f0af6b098de87aeb775af8960655cd6c`.
 - **Bit-Level Payload Validation:**
   - 100% of real video files on disk match their respective `Real-vid.zip` central directory member uncompressed size and CRC32 (0 mismatches across 4,361 files).
   - 100% of fake video files on disk match their respective `Fake-vid.zip` central directory member uncompressed size and CRC32 (0 mismatches across 4,361 files).
@@ -99,7 +99,7 @@ Both Zenodo source archives and their extracted contents were audited:
 
 ## 4. Pair-by-Pair Validation & Graph Containment
 
-Every single one of the 4,361 rows in `protocol_c_split_manifest.csv` was audited against the physical filesystem:
+Every single one of the 4,361 rows in `../data/protocol_c_split_manifest.csv` was audited against the physical filesystem:
 
 - **Real Video Member:** `<base_id>.mp4` verified present in `data/extracted/hidf/real/`.
 - **Fake Video Member:** `<base_id>_<target_id>.mp4` verified present in `data/extracted/hidf/fake/`.
@@ -113,7 +113,7 @@ Every single one of the 4,361 rows in `protocol_c_split_manifest.csv` was audite
   - Duplicate fake pairs: **0**
   - Malformed filenames: **0**
 
-The complete pair-by-pair validation ledger was generated and saved to [`phase4_4_pairing_audit.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase4_4_pairing_audit.csv) ($4,361$ rows).
+The complete pair-by-pair validation ledger was generated and saved to [`../data/phase4_4_pairing_audit.csv`](../data/phase4_4_pairing_audit.csv) ($4,361$ rows).
 
 ---
 
@@ -144,7 +144,7 @@ Partition leakage is mathematically zero. Neither background environment, facial
 
 ## 6. Demographic Balance & Subgroup Distribution Audit
 
-Demographic distributions across partitions were tabulated into [`phase4_4_split_statistics.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase4_4_split_statistics.csv):
+Demographic distributions across partitions were tabulated into [`../data/phase4_4_split_statistics.csv`](../data/phase4_4_split_statistics.csv):
 
 ### 6.1 Racial Cohort Distribution
 
@@ -196,10 +196,10 @@ Over $196\text{ GB}$ of physical free space remains on volume `C:\`, confirming 
 
 ## 8. Automated Test Suite Validation
 
-The AI Engine test suite was augmented with Phase 4.4 dataset audit unit tests ([`ai-engine/tests/test_hidf_dataset_audit.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/tests/test_hidf_dataset_audit.py)):
+The AI Engine test suite was augmented with Phase 4.4 dataset audit unit tests ([`ai-engine/tests/test_hidf_dataset_audit.py`](../../ai-engine/tests/test_hidf_dataset_audit.py)):
 - `test_split_manifest_integrity`: Validates exact row count ($4,361$) and partition allocations ($3,053 / 654 / 654$).
 - `test_zero_leakage_invariants`: Mathematically validates zero base ID, target donor, and component overlap across all three splits.
-- `test_pairing_audit_invariants`: Verifies all $4,361$ pairs in `phase4_4_pairing_audit.csv` have status `VERIFIED_VALID_PAIR` with $100\%$ size and CRC32 match.
+- `test_pairing_audit_invariants`: Verifies all $4,361$ pairs in `../data/phase4_4_pairing_audit.csv` have status `VERIFIED_VALID_PAIR` with $100\%$ size and CRC32 match.
 - `test_split_statistics_consistency`: Validates that partition component sums match total unique components ($4,236$).
 
 **Full Test Suite Execution:**
@@ -213,11 +213,11 @@ $100\%$ test pass rate ($254 / 254$ tests passing) confirmed.
 
 ## 9. Deliverables Inventory
 
-1. [`phase4_4_dataset_audit_report.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase4_4_dataset_audit_report.md) — This formal comprehensive audit and discrepancy resolution document.
-2. [`phase4_4_pairing_audit.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase4_4_pairing_audit.csv) — $4,361$ rows mapping every authentic/deepfake pair to base_id, target_id, component_id, split, demographics, file sizes, CRC32s, and verification status.
-3. [`phase4_4_split_statistics.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase4_4_split_statistics.csv) — Summary statistics per partition and dataset total, detailing pair counts, video counts, component counts, uncompressed byte counts, and full demographic breakdowns.
-4. [`scripts/audit_phase4_4.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/audit_phase4_4.py) — Standalone reproducible audit script.
-5. [`ai-engine/tests/test_hidf_dataset_audit.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/tests/test_hidf_dataset_audit.py) — Invariant verification test suite.
+1. [`phase4_4_dataset_audit_report.md`](phase4_4_dataset_audit_report.md) — This formal comprehensive audit and discrepancy resolution document.
+2. [`../data/phase4_4_pairing_audit.csv`](../data/phase4_4_pairing_audit.csv) — $4,361$ rows mapping every authentic/deepfake pair to base_id, target_id, component_id, split, demographics, file sizes, CRC32s, and verification status.
+3. [`../data/phase4_4_split_statistics.csv`](../data/phase4_4_split_statistics.csv) — Summary statistics per partition and dataset total, detailing pair counts, video counts, component counts, uncompressed byte counts, and full demographic breakdowns.
+4. [`scripts/audit_phase4_4.py`](../../scripts/audit_phase4_4.py) — Standalone reproducible audit script.
+5. [`ai-engine/tests/test_hidf_dataset_audit.py`](../../ai-engine/tests/test_hidf_dataset_audit.py) — Invariant verification test suite.
 
 ---
 

@@ -22,10 +22,10 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-MANIFEST_PATH = PROJECT_ROOT / "protocol_c_split_manifest.csv"
+MANIFEST_PATH = PROJECT_ROOT / "reports" / "data" / "protocol_c_split_manifest.csv"
 FUSION_MODEL_PATH = PROJECT_ROOT / "ai-engine" / "models" / "fusion" / "phase10_fusion.joblib"
 SCORES_CSV_PATH = PROJECT_ROOT / "data" / "derived" / "fusion" / "phase10_multimodal_scores.csv"
-METRICS_JSON_PATH = PROJECT_ROOT / "phase10_metrics.json"
+METRICS_JSON_PATH = PROJECT_ROOT / "reports" / "data" / "phase10_metrics.json"
 
 EXPECTED_MANIFEST_SHA256 = "c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7"
 

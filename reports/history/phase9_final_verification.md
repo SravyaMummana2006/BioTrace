@@ -22,9 +22,9 @@
 ## 1. Check 1: Phase 6 Visual Baseline Metric Audit & Discrepancy Analysis
 
 ### 1.1 Genuine Phase 6 Test Evaluation Results
-The official Phase 6 visual baseline checkpoint [`ai-engine/models/baseline/best_model.pth`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/ai-engine/models/baseline/best_model.pth) (`SHA-256: 332846ff1479d1f6cdb1313e3247e484ec4a832d5e7c2146fb3a2e0719f29cbc`) and evaluation record [`phase6_metrics.json`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase6_metrics.json) document the following empirical metrics on the held-out Protocol C test partition (1,308 videos: 654 real, 654 fake):
+The official Phase 6 visual baseline checkpoint [`ai-engine/models/baseline/best_model.pth`](../../ai-engine/models/baseline/best_model.pth) (`SHA-256: 332846ff1479d1f6cdb1313e3247e484ec4a832d5e7c2146fb3a2e0719f29cbc`) and evaluation record [`../data/phase6_metrics.json`](../data/phase6_metrics.json) document the following empirical metrics on the held-out Protocol C test partition (1,308 videos: 654 real, 654 fake):
 
-| Metric | Phase 6 Official Test Result (`phase6_metrics.json`) | Erroneously Reported in Phase 9 Artifacts | Discrepancy Nature |
+| Metric | Phase 6 Official Test Result (`../data/phase6_metrics.json`) | Erroneously Reported in Phase 9 Artifacts | Discrepancy Nature |
 | :--- | :---: | :---: | :--- |
 | **Video-Level ROC-AUC** | **0.782059** ($\approx 0.7821$) | **0.9996** | Fictitious placeholder ($+0.2175$ inflation) |
 | **Video-Level PR-AUC** | **0.755027** ($\approx 0.7550$) | **0.9996** | Fictitious placeholder ($+0.2446$ inflation) |
@@ -45,7 +45,7 @@ Actual Manipulated (Fake)          139 (21.3%)                   515 (78.7%)
 - False Negatives: **139** | True Positives: **515**
 
 ### 1.2 Root Cause of the 0.9996 Discrepancy
-Inspection of [`scripts/train_phase9_classifiers.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/train_phase9_classifiers.py) (lines 299–305) revealed the exact source:
+Inspection of [`scripts/train_phase9_classifiers.py`](../../scripts/train_phase9_classifiers.py) (lines 299–305) revealed the exact source:
 ```python
     # 7. Comparison with Phase 6 Baseline
     phase6_baseline = {
@@ -56,7 +56,7 @@ Inspection of [`scripts/train_phase9_classifiers.py`](file:///c:/Users/Sravya%20
         "test_f1": 0.9962,
     }
 ```
-**Finding:** The script hardcoded an idealized placeholder dictionary rather than programmatically loading `phase6_metrics.json`. This mock block was serialized into [`phase9_metrics.json`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase9_metrics.json) (lines 150–156) and subsequently transcribed into the text of [`phase9_physiological_report.md`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase9_physiological_report.md).
+**Finding:** The script hardcoded an idealized placeholder dictionary rather than programmatically loading `../data/phase6_metrics.json`. This mock block was serialized into [`../data/phase9_metrics.json`](../data/phase9_metrics.json) (lines 150–156) and subsequently transcribed into the text of [`phase9_physiological_report.md`](phase9_physiological_report.md).
 
 > [!CAUTION]
 > **Check 1 Status: FAIL (Reporting Discrepancy)**  
@@ -67,9 +67,9 @@ Inspection of [`scripts/train_phase9_classifiers.py`](file:///c:/Users/Sravya%20
 ## 2. Check 2: Protocol C Partition & Video Alignment
 
 To verify that Phase 6 and Phase 9 evaluated identical videos under the frozen bipartite split, we cross-referenced:
-1. Ground-truth manifest: [`protocol_c_split_manifest.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/protocol_c_split_manifest.csv)
+1. Ground-truth manifest: [`../data/protocol_c_split_manifest.csv`](../data/protocol_c_split_manifest.csv)
 2. Phase 6 frame directories: `data/derived/frames/{train,val,test}/{real,fake}/`
-3. Phase 9 feature dataset: [`phase9_physiological_features.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase9_physiological_features.csv)
+3. Phase 9 feature dataset: [`../data/phase9_physiological_features.csv`](../data/phase9_physiological_features.csv)
 
 ### Partition Alignment Verification
 
@@ -94,7 +94,7 @@ To verify that Phase 6 and Phase 9 evaluated identical videos under the frozen b
 
 ## 3. Check 3: Data Leakage & Evaluation Isolation Audit
 
-We audited the data flow and execution pipeline in [`scripts/train_phase9_classifiers.py`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/scripts/train_phase9_classifiers.py):
+We audited the data flow and execution pipeline in [`scripts/train_phase9_classifiers.py`](../../scripts/train_phase9_classifiers.py):
 
 1. **Preprocessing Pipeline Isolation:**
    - Lines 197–203:
@@ -159,7 +159,7 @@ None of the warnings impact test assertions, numeric validity, or runtime behavi
 
 ## 5. Check 5: Checkpoint & Preprocessing Reproducibility
 
-To verify independent reproducibility, an isolated verification script loaded the serialized checkpoints and re-evaluated the test partition directly from [`phase9_physiological_features.csv`](file:///c:/Users/Sravya%20mummana/OneDrive/BioTrace/phase9_physiological_features.csv):
+To verify independent reproducibility, an isolated verification script loaded the serialized checkpoints and re-evaluated the test partition directly from [`../data/phase9_physiological_features.csv`](../data/phase9_physiological_features.csv):
 
 ```python
 preprocessor = joblib.load('ai-engine/models/physiological/preprocessor.joblib')
@@ -172,7 +172,7 @@ y_pred = (y_prob >= 0.5128).astype(int)
 
 ### Numerical Comparison: Stored Metrics vs. Freshly Re-evaluated Metrics
 
-| Metric | Stored in `phase9_metrics.json` | Freshly Re-evaluated from Checkpoint | Exact Match? |
+| Metric | Stored in `../data/phase9_metrics.json` | Freshly Re-evaluated from Checkpoint | Exact Match? |
 | :--- | :---: | :---: | :---: |
 | **ROC-AUC** | 0.6267 | 0.6267 | **Yes (Exact)** |
 | **PR-AUC** | 0.6117 | 0.6117 | **Yes (Exact)** |

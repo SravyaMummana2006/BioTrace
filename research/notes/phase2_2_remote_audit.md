@@ -206,13 +206,13 @@ The Phase 2.2 audit produced the following persistent, reproducible deliverables
 | Deliverable File | Path | Size | Description |
 | :--- | :--- | :--- | :--- |
 | **Audit Report** | `phase2_2_remote_audit.md` | ~8 KB | This comprehensive audit report. |
-| **Fake Pair Manifest** | `remote_fake_pair_manifest.csv` | 295,109 B | 4,361 verified pair rows mapping every fake video to its base and donor IDs. |
-| **Cluster Degree Distribution** | `remote_cluster_degree_distribution.csv` | 90 B | Frequency table demonstrating 100.00% Degree-1 clustering. |
-| **Unmatched Files Log** | `remote_unmatched_files.csv` | 54 B | Error catalog (0 errors, 0 unmatched files). |
+| **Fake Pair Manifest** | `../../reports/data/remote_fake_pair_manifest.csv` | 295,109 B | 4,361 verified pair rows mapping every fake video to its base and donor IDs. |
+| **Cluster Degree Distribution** | `../../reports/data/remote_cluster_degree_distribution.csv` | 90 B | Frequency table demonstrating 100.00% Degree-1 clustering. |
+| **Unmatched Files Log** | `../../reports/data/remote_unmatched_files.csv` | 54 B | Error catalog (0 errors, 0 unmatched files). |
 | **Audit Summary JSON** | `scratch/remote_audit_summary.json` | ~4 KB | Machine-readable log of all HTTP queries and telemetry. |
 | **Inspection Tool** | `scratch/remote_zip_audit.py` | ~16 KB | Fully reproducible Python script utilizing HTTP Range requests. |
 
-*Note: All original Phase 1 and Phase 2 files (`phase2_archive_audit.md`, `datasets/fake_pair_manifest.csv`, `datasets/cluster_degree_distribution.csv`, `datasets/unmatched_archive_files.csv`, `datasets/metadata.csv`) remain completely untouched and preserved.*
+*Note: All original Phase 1 and Phase 2 files (`../../reports/history/phase2_archive_audit.md`, `../../reports/data/remote_fake_pair_manifest.csv`, `../../reports/data/remote_cluster_degree_distribution.csv`, `../../reports/data/unmatched_archive_files.csv`, `datasets/metadata.csv`) remain completely untouched and preserved.*
 
 ---
 
