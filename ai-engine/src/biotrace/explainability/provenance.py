@@ -70,7 +70,8 @@ class ProvenanceCollector:
             unavailable.append("video_sha256_file_inaccessible")
 
         # Sanitize video identifier to filename only (strips C:\Users\..., /home/..., etc.)
-        sanitized_filename = os.path.basename(video_path)
+        # Normalize separators first so Windows paths are handled on POSIX hosts too.
+        sanitized_filename = video_path.replace("\\", "/").rsplit("/", 1)[-1]
 
         # 2. Visual Model Metadata
         model_arch = None

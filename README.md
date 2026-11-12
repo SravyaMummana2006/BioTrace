@@ -6,7 +6,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.6%2B-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Build: Maven](https://img.shields.io/badge/Build-Maven%203.9%2B-C71A36?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests: 344 Passing](https://img.shields.io/badge/Tests-344%20Passing-brightgreen.svg)](#8-testing--verification)
+[![Tests: See verified results](https://img.shields.io/badge/Tests-See%20verified%20results-brightgreen.svg)](#8-testing--verification)
 
 > **BIOTrace** is an open-source biological intelligence and multimodal media authenticity platform designed to detect synthetic and manipulated facial media (deepfakes, face swaps, generative diffusion). It combines deep convolutional visual representations with remote photoplethysmography (rPPG) and facial kinematic dynamics under strict, zero-leakage bipartite actor isolation.
 
@@ -19,7 +19,7 @@
 4. [Empirical Benchmark Results](#4-empirical-benchmark-results)
 5. [User Interface & Visual Evidence](#5-user-interface--visual-evidence)
 6. [Technology Stack](#6-technology-stack)
-7. [Installation & Windows Quickstart](#7-installation--windows-quickstart)
+7. [Installation & Quickstart](#7-installation--quickstart)
 8. [Testing & Verification](#8-testing--verification)
 9. [Documentation & Research Reports](#9-documentation--research-reports)
 10. [Authorship & License](#10-authorship--license)
@@ -151,21 +151,64 @@ Forensic Studio detecting synthetic facial manipulation:
 - **JSON Processing**: Jackson Databind 2.16.1
 
 ### Python AI Engine (`ai-engine/`)
-- **Runtime**: Python 3.11 / 3.12
+- **Runtime**: Python 3.11–3.13
 - **REST Framework**: FastAPI 0.110+, Uvicorn 0.28+
-- **Deep Learning**: PyTorch 2.6+, Torchvision 0.21+
-- **Computer Vision**: OpenCV (`cv2`) 4.9+, MediaPipe 0.10+
-- **Machine Learning & Signals**: scikit-learn 1.4+, SciPy 1.12+, NumPy 1.26+, joblib 1.3+
+- **Deep Learning**: PyTorch 2.2+, Torchvision 0.17+
+- **Computer Vision**: OpenCV (`cv2`, contrib) 4.9+, MediaPipe 1.2+ (Tasks API)
+- **Face Landmarking**: MediaPipe Tasks `FaceLandmarker` via `biotrace.vision.mediapipe_compat`
+- **Machine Learning & Signals**: scikit-learn 1.4+, SciPy 1.10+, NumPy 1.26+, joblib 1.3+
 - **Data Schemas**: Pydantic v2.6+
 
 ---
 
-## 7. Installation & Windows Quickstart
+## 7. Installation & Quickstart
 
 ### Prerequisites
 1. **Java Development Kit**: JDK 21 or higher installed and on your `PATH` (or configured via `JAVA_HOME`).
-2. **Python**: Python 3.11 or 3.12 (with `pip`) installed and available.
-3. **Git**: Git for Windows.
+2. **Python**: Python 3.11–3.13 (with `pip`) installed and available. MediaPipe 1.2+ is required; current Apple Silicon wheels ship the Tasks API only.
+3. **Git**.
+
+### macOS (Apple Silicon) — Verified Setup
+
+These commands are the reproducible clean-checkout path. Run them from the repository root:
+
+```bash
+# 1. Create an isolated environment (use python3.11, python3.12, or python3.13)
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+
+# 2. Install the AI engine dependencies (MediaPipe Tasks API + PyTorch + OpenCV)
+pip install -r ai-engine/requirements.txt
+
+# 3. Download and verify required model assets
+#    (the MediaPipe face landmarker is downloaded, not committed)
+python scripts/download_models.py
+python scripts/download_models.py --check
+
+# 4. Terminal 1: start the FastAPI AI engine
+PYTHONPATH=ai-engine/src python -m uvicorn biotrace.main:create_app \
+  --factory --app-dir ai-engine/src --host 127.0.0.1 --port 8000
+
+# 5. Terminal 2: verify the health endpoint
+curl -s http://127.0.0.1:8000/api/v1/health
+
+# 6. Terminal 2: launch the Java desktop client
+cd java-client
+mvn compile exec:java
+```
+
+Expected health response includes `"status":"healthy"` and the Python/Torch versions. Expected model files:
+
+- `ai-engine/models/baseline/best_model.pth`
+- `ai-engine/models/physiological/best_model.joblib`
+- `ai-engine/models/physiological/preprocessor.joblib`
+- `ai-engine/models/fusion/phase10_fusion.joblib`
+- `ai-engine/models/mediapipe/face_landmarker.task` (created by `scripts/download_models.py`)
+
+If `python3` resolves to Python 3.14+, select an explicit supported interpreter (for example `python3.13 -m venv .venv`). The pinned requirement range is `requires-python = ">=3.11,<3.14"`.
+
+The legacy `mediapipe.solutions.face_mesh` API is not present in current macOS ARM wheels. BIOTrace now uses the supported MediaPipe Tasks `FaceLandmarker` through `biotrace.vision.mediapipe_compat`.
 
 ---
 
@@ -190,7 +233,9 @@ cd BioTrace
 If you prefer running the backend and frontend in separate dedicated terminal windows:
 
 #### Terminal 1 — Start the Python AI Engine Backend:
-> **Windows Tip:** If your machine has Python 3.13 set as the default in `PATH`, running standard `python` will fail because PyTorch and MediaPipe require Python 3.11/3.12. Always use `run_backend.bat` or target the `.venv` executable directly:
+> **Model assets:** Run `python scripts/download_models.py` once after installing dependencies. It downloads and verifies the MediaPipe face-landmarker model required by the current MediaPipe Tasks API. The checked-in EfficientNet/Random-Forest/fusion weights are verified by the same command.
+
+> **Windows Tip:** If your machine has Python 3.14+ set as the default in `PATH`, running standard `python` will fail because the supported Python range is 3.11–3.13. Always use `run_backend.bat` or target the `.venv` executable directly:
 
 ```powershell
 # Option 1 (Easiest): Double-click run_backend.bat or run:
@@ -223,19 +268,19 @@ The Java Forensic Studio will open with a green `ENGINE: ONLINE (v0.1.0)` status
 
 The repository contains an exhaustive automated test suite covering unit, domain, service, API, and live end-to-end integration workflows.
 
-### Python Test Suite (301 Tests)
-```powershell
+### Python Test Suite
+```bash
 cd ai-engine
-pytest tests -v
+python -m pytest tests -q
 ```
-*Current status: 301 passed in 28.2s.*
+*Verified on macOS Apple Silicon (Python 3.13, MediaPipe 1.2.3): **280 passed, 9 skipped, 14 failed**. The failures require external research artifacts that are intentionally not committed: the HiDF dataset (`data/extracted/hidf`), derived fusion score caches, and the `datasets/test_synthetic.mp4` fixture.*
 
-### Java Test Suite (43 Tests)
-```powershell
+### Java Test Suite
+```bash
 cd java-client
-..\scripts\run_mvn.ps1 -f pom.xml test
+mvn test
 ```
-*Current status: 43 tests executed (38 passed, 5 live integration stubs skipped in offline mode).*
+*Verified on macOS: **61 tests, 57 passed, 9 skipped, 4 failed**. Three failures require HiDF fixture videos under `data/extracted/hidf/`; one is a font-family assertion (`Segoe UI`) that does not hold on macOS, where the JVM substitutes `Dialog`. The live workstation workflow passes separately against a running backend.*
 
 ---
 

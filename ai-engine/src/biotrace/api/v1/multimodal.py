@@ -7,15 +7,20 @@ Integrates:
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from biotrace.core.logging import get_logger
 from biotrace.multimodal.multimodal_service import (
+    FUSION_MODEL_PATH,
+    P6_CHECKPOINT_PATH,
+    P9_MODEL_PATH,
+    P9_PREPROCESSOR_PATH,
     MultimodalAnalysisReport,
     MultimodalForensicService,
 )
+from biotrace.vision.mediapipe_compat import resolve_face_landmarker_model
 
 logger = get_logger(__name__)
 
@@ -51,6 +56,7 @@ class MultimodalSystemInfo(BaseModel):
             "weights": {"visual_prob": 1.3838, "phys_prob": 0.7668},
         },
     }
+    missing_models: List[str] = Field(default_factory=list)
     manifest_provenance: str = "c15300c15ca78fb58ab16d8f01549534dffb05fb9d75664ac14b2d12c0af06b7"
     governance_notice: str = (
         "Strict Protocol C Bipartite Isolation: Preprocessing and models were fit exclusively on training data. "
@@ -59,10 +65,26 @@ class MultimodalSystemInfo(BaseModel):
     )
 
 
+def _missing_model_assets() -> List[str]:
+    missing: List[str] = []
+    for path in (P6_CHECKPOINT_PATH, P9_MODEL_PATH, P9_PREPROCESSOR_PATH, FUSION_MODEL_PATH):
+        if not Path(path).exists():
+            missing.append(str(path))
+    try:
+        resolve_face_landmarker_model()
+    except FileNotFoundError:
+        missing.append("ai-engine/models/mediapipe/face_landmarker.task")
+    return missing
+
+
 @router.get("/info", response_model=MultimodalSystemInfo)
 def get_multimodal_info() -> MultimodalSystemInfo:
     """Returns architecture specifications, model weights provenance, and operating thresholds."""
-    return MultimodalSystemInfo()
+    missing = _missing_model_assets()
+    return MultimodalSystemInfo(
+        status="AVAILABLE" if not missing else "MODELS_MISSING",
+        missing_models=missing,
+    )
 
 
 @router.post("/analyze", response_model=MultimodalAnalysisReport)

@@ -16,6 +16,7 @@ Extracts HiDF Real-vid.zip and Fake-vid.zip safely with:
 import os
 import sys
 import argparse
+import re
 import zipfile
 import zlib
 import hashlib
@@ -55,9 +56,16 @@ def is_safe_path(target_dir, member_path):
     """
     Prevent ZipSlip vulnerability (path traversal attack).
     Ensures that extracting member_path remains strictly inside target_dir.
+
+    Both POSIX and Windows separators are normalized, and absolute/drive-prefixed
+    members are rejected regardless of the host platform.
     """
+    normalized_member = str(member_path).replace("\\", "/")
+    if normalized_member.startswith("/") or re.match(r"^[A-Za-z]:", normalized_member):
+        return False
+
     resolved_dest = os.path.abspath(target_dir)
-    resolved_target = os.path.abspath(os.path.join(target_dir, member_path))
+    resolved_target = os.path.abspath(os.path.join(target_dir, normalized_member))
     return os.path.commonpath([resolved_dest]) == os.path.commonpath([resolved_dest, resolved_target])
 
 def compute_file_crc32(filepath):

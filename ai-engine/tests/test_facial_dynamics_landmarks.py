@@ -279,10 +279,14 @@ def test_canonical_landmark_indices_constants():
 
 
 def test_chin_landmark_gnathion_index_verification():
-    import mediapipe as mp
+    from mediapipe.tasks.python import vision
 
     face_oval_indices = set(
-        [idx for pair in mp.solutions.face_mesh.FACEMESH_FACE_OVAL for idx in pair]
+        [
+            idx
+            for connection in vision.FaceLandmarksConnections.FACE_LANDMARKS_FACE_OVAL
+            for idx in (connection.start, connection.end)
+        ]
     )
 
     # 152 must be in the outer face contour (gnathion / lower border of mandible)

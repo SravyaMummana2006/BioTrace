@@ -87,6 +87,22 @@ if (-not $env:MPLCONFIGDIR) {
     }
 }
 
+# Ensure the MediaPipe Tasks face-landmarker model is available.
+$modelScript = Join-Path $rootDir "scripts\download_models.py"
+$landmarkerModel = Join-Path $engineDir "models\mediapipe\face_landmarker.task"
+if ((Test-Path $modelScript) -and -not (Test-Path $landmarkerModel)) {
+    Write-Host "  Downloading required MediaPipe face-landmarker model..." -ForegroundColor Yellow
+    if ($pythonExe -eq "py -3.11") {
+        & py -3.11 $modelScript
+    } else {
+        & $pythonExe $modelScript
+    }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error: model download failed. Run: python scripts/download_models.py" -ForegroundColor Red
+        exit 1
+    }
+}
+
 $uvicornArgs = @("-m", "uvicorn", "biotrace.main:create_app", "--factory", "--app-dir", "src", "--host", $HostAddress, "--port", "$Port")
 if ($Reload) {
     $uvicornArgs += "--reload"

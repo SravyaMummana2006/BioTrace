@@ -18,6 +18,9 @@ Thumbs.db
 .env.*.local
 *.env
 
+# Downloaded MediaPipe Tasks model asset (see scripts/download_models.py)
+ai-engine/models/mediapipe/*.task
+
 # Local Tooling & Sandboxes
 .tools/
 scratch/

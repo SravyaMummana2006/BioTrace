@@ -95,17 +95,41 @@ public class AsyncJobOrchestrator implements JobOrchestrator {
     }
 
     @Override
+    public CompletableFuture<AnalysisJob> getJob(String jobId) {
+        return apiClient.getJobStatusAsync(jobId);
+    }
+
+    @Override
     public CompletableFuture<Boolean> cancelAnalysis(String jobId) {
         stopPolling(jobId);
         return apiClient.cancelJobAsync(jobId)
                 .thenApply(success -> {
-                    repository.findById(jobId).ifPresent(job -> {
-                        job.markCancelled();
-                        repository.save(job);
-                        eventBus.publish(job);
-                    });
-                    return success;
+                    if (Boolean.TRUE.equals(success)) {
+                        repository.findById(jobId).ifPresent(job -> {
+                            job.markCancelled();
+                            repository.save(job);
+                            eventBus.publish(job);
+                        });
+                    } else {
+                        resumePollingIfActive(jobId);
+                    }
+                    return Boolean.TRUE.equals(success);
+                })
+                .exceptionally(throwable -> {
+                    resumePollingIfActive(jobId);
+                    throw (throwable instanceof RuntimeException re) ? re : new RuntimeException(throwable);
                 });
+    }
+
+    private void resumePollingIfActive(String jobId) {
+        if (activePollingTasks.containsKey(jobId)) {
+            return;
+        }
+        repository.findById(jobId).ifPresent(job -> {
+            if (!job.getStatus().isTerminal()) {
+                schedulePolling(jobId);
+            }
+        });
     }
 
     @Override

@@ -180,31 +180,43 @@ def test_simulated_head_motion_and_abrupt_illumination():
     assert np.std(detrended) < 1.0
 
 
-def test_missing_facial_landmarks_fallback():
+def test_missing_facial_landmarks_fallback(tmp_path):
     """Verifies that video with no detectable face fails safely with neutral authenticity."""
+    import cv2
+
+    video_path = tmp_path / "non_face.mp4"
+    writer = cv2.VideoWriter(
+        str(video_path), cv2.VideoWriter_fourcc(*"mp4v"), 30.0, (160, 120)
+    )
+    for _ in range(30):
+        writer.write(np.zeros((120, 160, 3), dtype=np.uint8))
+    writer.release()
+
     meta = VideoMetadata(
-        file_path="../datasets/test_synthetic.mp4",
+        file_path=str(video_path),
         file_name="non_face.mp4",
         container_format="mp4",
-        duration_seconds=3.0,
-        frame_count=90,
+        duration_seconds=1.0,
+        frame_count=30,
         fps=30.0,
-        width=320,
-        height=240,
-        codec="h264",
-        file_size_bytes=10000,
+        width=160,
+        height=120,
+        codec="mp4v",
+        file_size_bytes=video_path.stat().st_size,
     )
     extractor = RPPGSignalExtractor()
-    verdict = extractor.extract("../datasets/test_synthetic.mp4", meta)
+    try:
+        verdict = extractor.extract(str(video_path), meta)
 
-    assert verdict is not None
-    assert verdict.modality == ForensicModality.RPPG
-    assert verdict.authenticity_score is None  # Authenticity must be unassessed
-    assert verdict.is_authenticity_assessed is False
-    assert verdict.confidence == 0.0
-    assert verdict.raw_signal is None
-    assert "Reliable facial landmark tracking could not be established" in verdict.explanation
-    extractor.close()
+        assert verdict is not None
+        assert verdict.modality == ForensicModality.RPPG
+        assert verdict.authenticity_score is None  # Authenticity must be unassessed
+        assert verdict.is_authenticity_assessed is False
+        assert verdict.confidence == 0.0
+        assert verdict.raw_signal is None
+        assert "Reliable facial landmark tracking could not be established" in verdict.explanation
+    finally:
+        extractor.close()
 
 
 def test_cancellation_during_extraction():
@@ -225,11 +237,13 @@ def test_cancellation_during_extraction():
     cancel_event.set()  # Pre-cancelled
 
     extractor = RPPGSignalExtractor()
-    verdict = extractor.extract(
-        "../datasets/test_synthetic.mp4", meta, cancel_event=cancel_event
-    )
-    assert verdict is None
-    extractor.close()
+    try:
+        verdict = extractor.extract(
+            "../datasets/test_synthetic.mp4", meta, cancel_event=cancel_event
+        )
+        assert verdict is None
+    finally:
+        extractor.close()
 
 
 def test_multiple_facial_regions_synchrony():

@@ -193,26 +193,35 @@ class JobManager:
         start_time = time.time()
         logger.info("Worker thread starting execution for job %s", job_id)
 
-        # Allocate per-job extractor instances to prevent shared mutable state across concurrent threads
-        from biotrace.evidence_fusion.fusion_engine import MultimodalEvidenceFusionEngine
-        from biotrace.facial_dynamics.extractor import FacialDynamicsExtractor
-        from biotrace.rppg.extractor import RPPGSignalExtractor
-        from biotrace.spatial_consistency.extractor import SpatialConsistencyExtractor
-        from biotrace.visual_detection.inference import VisualDeepfakeDetector
-
-        rppg_extractor = self._custom_rppg_extractor or RPPGSignalExtractor()
-        facial_dynamics_extractor = (
-            self._custom_facial_dynamics_extractor or FacialDynamicsExtractor()
-        )
-        spatial_consistency_extractor = (
-            self._custom_spatial_consistency_extractor or SpatialConsistencyExtractor()
-        )
-        fusion_engine = (
-            self._custom_evidence_fusion_engine or MultimodalEvidenceFusionEngine()
-        )
-        visual_detector = self._custom_visual_detector or VisualDeepfakeDetector()
+        # Per-job resources are tracked so partially initialized workers can be cleaned up.
+        rppg_extractor: Optional[Any] = None
+        facial_dynamics_extractor: Optional[Any] = None
+        spatial_consistency_extractor: Optional[Any] = None
+        fusion_engine: Optional[Any] = None
+        visual_detector: Optional[Any] = None
+        initialization_complete = False
 
         try:
+            # Allocate per-job extractor instances to prevent shared mutable state across concurrent threads
+            from biotrace.evidence_fusion.fusion_engine import MultimodalEvidenceFusionEngine
+            from biotrace.facial_dynamics.extractor import FacialDynamicsExtractor
+            from biotrace.rppg.extractor import RPPGSignalExtractor
+            from biotrace.spatial_consistency.extractor import SpatialConsistencyExtractor
+            from biotrace.visual_detection.inference import VisualDeepfakeDetector
+
+            rppg_extractor = self._custom_rppg_extractor or RPPGSignalExtractor()
+            facial_dynamics_extractor = (
+                self._custom_facial_dynamics_extractor or FacialDynamicsExtractor()
+            )
+            spatial_consistency_extractor = (
+                self._custom_spatial_consistency_extractor or SpatialConsistencyExtractor()
+            )
+            fusion_engine = (
+                self._custom_evidence_fusion_engine or MultimodalEvidenceFusionEngine()
+            )
+            visual_detector = self._custom_visual_detector or VisualDeepfakeDetector()
+            initialization_complete = True
+
             self._update_progress(
                 job_id, JobStatus.RUNNING, ProcessingStage.VALIDATING_CONTAINER, 10.0
             )
@@ -440,6 +449,11 @@ class JobManager:
 
         except Exception as e:
             logger.error("Job %s failed with exception: %s", job_id, str(e), exc_info=True)
+            error_message = (
+                str(e)
+                if initialization_complete
+                else f"Worker initialization failed: {e}"
+            )
             with self._lock:
                 if job_id in self._jobs:
                     job = self._jobs[job_id]
@@ -449,24 +463,30 @@ class JobManager:
                         return
                     job.status = JobStatus.FAILED
                     job.completed_at = datetime.utcnow()
-                    job.error_message = str(e)
+                    job.error_message = error_message
         finally:
-            if self._custom_rppg_extractor is None:
+            if self._custom_rppg_extractor is None and rppg_extractor is not None:
                 try:
                     rppg_extractor.close()
                 except Exception as exc:
                     logger.debug("Error closing per-job rppg_extractor: %s", exc)
-            if self._custom_facial_dynamics_extractor is None:
+            if (
+                self._custom_facial_dynamics_extractor is None
+                and facial_dynamics_extractor is not None
+            ):
                 try:
                     facial_dynamics_extractor.close()
                 except Exception as exc:
                     logger.debug("Error closing per-job facial_dynamics_extractor: %s", exc)
-            if self._custom_spatial_consistency_extractor is None:
+            if (
+                self._custom_spatial_consistency_extractor is None
+                and spatial_consistency_extractor is not None
+            ):
                 try:
                     spatial_consistency_extractor.close()
                 except Exception as exc:
                     logger.debug("Error closing per-job spatial_consistency_extractor: %s", exc)
-            if self._custom_visual_detector is None:
+            if self._custom_visual_detector is None and visual_detector is not None:
                 try:
                     visual_detector.close()
                 except Exception as exc:

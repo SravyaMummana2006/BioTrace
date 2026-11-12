@@ -187,6 +187,8 @@ public class LiveIntegrationTest {
         assertTrue(result.contains("prediction"), "Response should contain prediction field");
         assertTrue(result.contains("raw_sigmoid_score"), "Response should contain raw_sigmoid_score");
         assertTrue(result.contains("mean_logit"), "Response should contain mean_logit");
-        assertTrue(result.contains("experimental_baseline_disclaimer"), "Response must contain baseline disclaimer");
+        assertTrue(result.contains("disclaimer"), "Response must contain baseline disclaimer");
+        assertTrue(result.contains("\"is_experimental_baseline\":true"),
+                "Response must flag the model as an experimental baseline");
     }
 }

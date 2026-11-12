@@ -2,12 +2,12 @@
 
 from typing import Any, Dict, List, Optional, Tuple
 import cv2
-import mediapipe as mp
 import numpy as np
 from pydantic import BaseModel
 
 from biotrace.core.logging import get_logger
 from biotrace.rppg.domain import TrackingMethod
+from biotrace.vision.mediapipe_compat import create_face_mesh
 
 logger = get_logger(__name__)
 
@@ -55,8 +55,7 @@ class LandmarkFaceTracker:
         min_detection_confidence: float = 0.5,
         min_tracking_confidence: float = 0.5,
     ):
-        self.mp_face_mesh = mp.solutions.face_mesh
-        self.face_mesh = self.mp_face_mesh.FaceMesh(
+        self.face_mesh = create_face_mesh(
             max_num_faces=1,
             refine_landmarks=False,
             min_detection_confidence=min_detection_confidence,

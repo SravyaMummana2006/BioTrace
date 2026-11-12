@@ -86,25 +86,36 @@ def sanitize_path_for_report(path: str, dataset_root: Optional[str] = None) -> s
     if not path:
         return ""
 
-    p = Path(path).resolve()
+    # Normalize separators first: reports may be generated on POSIX hosts while
+    # containing Windows paths (and vice versa).
+    path_str = str(path).replace("\\", "/")
 
     if dataset_root:
+        root_str = str(dataset_root).replace("\\", "/").rstrip("/")
+        if path_str == root_str:
+            return ""
+        if path_str.startswith(root_str + "/"):
+            return path_str[len(root_str) + 1:]
+
+        # Prefer real filesystem relative resolution when both paths exist locally.
         try:
+            p = Path(path).resolve()
             root_p = Path(dataset_root).resolve()
             rel = p.relative_to(root_p)
             return str(rel).replace("\\", "/")
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, OSError):
             pass
 
     # Fallback: check for standard benchmark directory names
-    path_str = str(p).replace("\\", "/")
     for dataset_name in ["FaceForensics++", "Celeb-DF-v2", "UBFC-rPPG", "UBFC-Phys", "HiDF", "DFDC", "datasets"]:
-        if dataset_name in path_str:
-            idx = path_str.index(dataset_name)
-            return path_str[idx:]
+        marker = f"/{dataset_name}/"
+        if marker in path_str:
+            return path_str[path_str.index(marker) + 1:]
+        if path_str.startswith(dataset_name + "/"):
+            return path_str
 
     # Final fallback: return safe filename only
-    return p.name
+    return path_str.rsplit("/", 1)[-1]
 
 
 class VideoRecord(BaseModel):

@@ -16,10 +16,10 @@ Scientific Principles & Limitations:
 
 from typing import Any, List, Optional, Sequence, Tuple, Union
 import cv2
-import mediapipe as mp
 import numpy as np
 
 from biotrace.core.logging import get_logger
+from biotrace.vision.mediapipe_compat import create_face_mesh
 from biotrace.facial_dynamics.domain import (
     LEFT_EYE_LANDMARKS,
     RIGHT_EYE_LANDMARKS,
@@ -82,8 +82,7 @@ class EyeLandmarkTracker:
         self.min_tracking_confidence = min_tracking_confidence
         self.refine_landmarks = refine_landmarks
 
-        self._mp_face_mesh = mp.solutions.face_mesh
-        self._face_mesh = self._mp_face_mesh.FaceMesh(
+        self._face_mesh = create_face_mesh(
             max_num_faces=1,
             refine_landmarks=self.refine_landmarks,
             min_detection_confidence=self.min_detection_confidence,

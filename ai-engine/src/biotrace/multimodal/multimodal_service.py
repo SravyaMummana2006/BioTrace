@@ -23,11 +23,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import cv2
 import joblib
-import mediapipe as mp
 import numpy as np
 from pydantic import BaseModel, Field
 
 from biotrace.core.logging import get_logger
+from biotrace.vision.mediapipe_compat import create_face_mesh
 from biotrace.domain.enums import ForensicModality, SignalType
 from biotrace.domain.models import ForensicSignal, SignalPoint, VideoMetadata
 from biotrace.facial_dynamics.domain import LEFT_EYE_LANDMARKS, RIGHT_EYE_LANDMARKS
@@ -73,8 +73,8 @@ class PhysiologicalAnalysisResult(BaseModel):
     """Structured findings from the Phase 9 physiological baseline."""
     status: str = Field(description="'COMPLETED', 'UNAVAILABLE', or 'FAILED'")
     prediction: str = Field(description="'REAL', 'FAKE', or 'UNASSESSED'")
-    fake_score: float = Field(description="Score indicating synthetic tendency [0.0, 1.0]")
-    real_score: float = Field(description="Score indicating authentic tendency [0.0, 1.0]")
+    fake_score: Optional[float] = Field(default=None, description="Score indicating synthetic tendency [0.0, 1.0]; None when unavailable")
+    real_score: Optional[float] = Field(default=None, description="Score indicating authentic tendency [0.0, 1.0]; None when unavailable")
     operating_threshold: float = Field(default=0.5128, description="Validation equal error rate threshold")
     is_calibrated: bool = False
     model_name: str = "Random Forest (Phase 9 Physiological Baseline)"
@@ -202,8 +202,6 @@ class MultimodalForensicService:
             return PhysiologicalAnalysisResult(
                 status="FAILED",
                 prediction="UNASSESSED",
-                fake_score=0.5,
-                real_score=0.5,
                 limitations=["Physiological model checkpoint failed to load."],
                 error_message="Model weights unavailable",
             )
@@ -213,8 +211,6 @@ class MultimodalForensicService:
             return PhysiologicalAnalysisResult(
                 status="FAILED",
                 prediction="UNASSESSED",
-                fake_score=0.5,
-                real_score=0.5,
                 limitations=["Failed to open video file for decoding."],
                 error_message="OpenCV VideoCapture failed",
             )
@@ -223,8 +219,7 @@ class MultimodalForensicService:
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         duration = total_frames / max(1.0, fps)
 
-        mp_face_mesh = mp.solutions.face_mesh
-        face_mesh = mp_face_mesh.FaceMesh(
+        face_mesh = create_face_mesh(
             static_image_mode=False,
             max_num_faces=1,
             refine_landmarks=True,
@@ -288,8 +283,6 @@ class MultimodalForensicService:
             return PhysiologicalAnalysisResult(
                 status="UNAVAILABLE",
                 prediction="UNASSESSED",
-                fake_score=0.5,
-                real_score=0.5,
                 limitations=limitations + ["Insufficient tracked facial frames to compute kinematics."],
                 error_message="Facial tracking degraded (< 10 valid frames)",
             )

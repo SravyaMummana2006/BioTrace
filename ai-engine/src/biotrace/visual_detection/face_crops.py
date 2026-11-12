@@ -17,10 +17,10 @@ Scientific Principles & Forensic Guardrails:
 
 from typing import List, Optional, Tuple
 import cv2
-import mediapipe as mp
 import numpy as np
 
 from biotrace.core.logging import get_logger
+from biotrace.vision.mediapipe_compat import create_face_mesh
 from biotrace.visual_detection.domain import FaceCropData, FaceDetectionStatus, VisualDetectionConfig
 
 logger = get_logger(__name__)
@@ -31,8 +31,7 @@ class FaceCropExtractor:
 
     def __init__(self, config: Optional[VisualDetectionConfig] = None):
         self.config = config or VisualDetectionConfig()
-        self._mp_face_mesh = mp.solutions.face_mesh
-        self._face_mesh = self._mp_face_mesh.FaceMesh(
+        self._face_mesh = create_face_mesh(
             max_num_faces=3,
             refine_landmarks=False,
             min_detection_confidence=0.5,

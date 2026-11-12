@@ -2,10 +2,10 @@
 
 from typing import Any, Dict, List, Optional, Tuple
 import cv2
-import mediapipe as mp
 import numpy as np
 
 from biotrace.core.logging import get_logger
+from biotrace.vision.mediapipe_compat import create_face_mesh
 from biotrace.spatial_consistency.domain import (
     FacialRegionId,
     RegionalSample,
@@ -86,8 +86,7 @@ class FacialRegionTracker:
         min_tracking_confidence: float = 0.5,
     ):
         self.config = config or SpatialConsistencyConfig()
-        self._mp_face_mesh = mp.solutions.face_mesh
-        self._face_mesh = self._mp_face_mesh.FaceMesh(
+        self._face_mesh = create_face_mesh(
             max_num_faces=1,
             refine_landmarks=False,
             min_detection_confidence=min_detection_confidence,

@@ -65,7 +65,26 @@ public class ForensicStudioView extends JPanel {
     private final JLabel fusionModelBadge;
     private final JLabel fusionModelDetail;
 
-    private String currentJobId = null;
+    private long runSequence = 0;
+    private volatile AnalysisRun activeRun = null;
+
+    /**
+     * Identifies one invocation of the analysis pipeline. A monotonically increasing
+     * id ensures repeated analyses of the same file are treated as distinct runs.
+     */
+    private static final class AnalysisRun {
+        private final long id;
+        private final String videoPath;
+        private String jobId;
+        private boolean cancellationRequested;
+        private boolean cancellationConfirmed;
+        private String retainedMultimodalJson;
+
+        private AnalysisRun(long id, String videoPath) {
+            this.id = id;
+            this.videoPath = videoPath;
+        }
+    }
 
     public ForensicStudioView(JobOrchestrator orchestrator, EventBus eventBus) {
         this.orchestrator = orchestrator;
@@ -495,6 +514,9 @@ public class ForensicStudioView extends JPanel {
             return;
         }
 
+        AnalysisRun run = new AnalysisRun(++runSequence, pathStr);
+        activeRun = run;
+
         analyzeButton.setEnabled(false);
         cancelButton.setEnabled(true);
         progressBar.setValue(0);
@@ -508,19 +530,21 @@ public class ForensicStudioView extends JPanel {
 
         orchestrator.startAnalysis(targetFile.toPath(), modalities)
                 .thenAccept(job -> SwingUtilities.invokeLater(() -> {
-                    this.currentJobId = job.getId();
+                    if (!isActiveRun(run)) return;
+                    run.jobId = job.getId();
                     statusBadge.setStatus(job.getStatus());
                     updateMetricBadge(jobIdMetricLabel, "Job UUID", job.getId().substring(0, Math.min(8, job.getId().length())) + "...");
+                    if (run.cancellationRequested) {
+                        dispatchCancellation(run);
+                    }
                 }))
                 .exceptionally(throwable -> {
                     SwingUtilities.invokeLater(() -> {
+                        if (!isActiveRun(run)) return;
                         analyzeButton.setEnabled(true);
                         cancelButton.setEnabled(false);
 
-                        Throwable root = throwable;
-                        while (root.getCause() != null && root != root.getCause()) {
-                            root = root.getCause();
-                        }
+                        Throwable root = rootCause(throwable);
                         String errMsg = root.getMessage() != null ? root.getMessage() : root.toString();
                         stageLabel.setText("Pipeline Error: " + errMsg);
                         verdictBannerPanel.setBackground(ForensicTheme.ALERT_BG);
@@ -557,7 +581,21 @@ public class ForensicStudioView extends JPanel {
 
         // Concurrently run unified multimodal verification (Phase 6 Visual + Phase 9 Physiological + Phase 10 Fusion)
         orchestrator.runMultimodalAnalysis(targetFile.toPath())
-                .thenAccept(json -> SwingUtilities.invokeLater(() -> applyMultimodalReport(json, pathStr)))
+                .thenAccept(json -> SwingUtilities.invokeLater(() -> {
+                    if (!isActiveRun(run)) {
+                        return;
+                    }
+                    if (run.cancellationConfirmed) {
+                        // Cancellation won: the result belongs to an aborted run.
+                        return;
+                    }
+                    if (run.cancellationRequested) {
+                        // Hold the result until the cancellation outcome is known.
+                        run.retainedMultimodalJson = json;
+                        return;
+                    }
+                    applyMultimodalReport(json, run.videoPath);
+                }))
                 .exceptionally(throwable -> {
                     // Do not fail hard if multimodal service encounters an unhandled edge case
                     return null;
@@ -565,17 +603,156 @@ public class ForensicStudioView extends JPanel {
     }
 
     private void cancelAnalysis() {
-        if (currentJobId != null) {
-            orchestrator.cancelAnalysis(currentJobId);
-            cancelButton.setEnabled(false);
-            analyzeButton.setEnabled(true);
-            baselineButton.setEnabled(true);
-            stageLabel.setText("Analysis cancellation requested.");
-            verdictBannerLabel.setText("ANALYSIS CANCELLED BY OPERATOR");
-            verdictBannerPanel.setBackground(ForensicTheme.NEUTRAL_BG);
-            verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.NEUTRAL_BORDER, 1));
-            verdictBannerLabel.setForeground(ForensicTheme.NEUTRAL_SLATE);
+        AnalysisRun run = activeRun;
+        if (run == null || run.cancellationRequested || run.cancellationConfirmed) return;
+
+        run.cancellationRequested = true;
+        showCancellationPending();
+        if (run.jobId == null) {
+            stageLabel.setText("Cancellation requested — waiting for job submission to complete...");
+            return;
         }
+        dispatchCancellation(run);
+    }
+
+    private void dispatchCancellation(AnalysisRun run) {
+        if (run.jobId == null) return;
+        run.cancellationRequested = true;
+        showCancellationPending();
+
+        orchestrator.cancelAnalysis(run.jobId)
+                .thenAccept(success -> SwingUtilities.invokeLater(() -> {
+                    if (!isActiveRun(run)) return;
+                    if (Boolean.TRUE.equals(success)) {
+                        markCancellationConfirmed(run);
+                    } else {
+                        reconcileCancellationFailure(run, "The AI Engine rejected the cancellation request.");
+                    }
+                }))
+                .exceptionally(throwable -> {
+                    String message = rootCauseMessage(throwable);
+                    SwingUtilities.invokeLater(() -> {
+                        if (!isActiveRun(run)) return;
+                        reconcileCancellationFailure(run, message);
+                    });
+                    return null;
+                });
+    }
+
+    private void showCancellationPending() {
+        cancelButton.setEnabled(false);
+        stageLabel.setText("Cancellation requested — awaiting engine confirmation...");
+        verdictBannerLabel.setText("CANCELLATION REQUESTED — AWAITING ENGINE CONFIRMATION");
+        verdictBannerPanel.setBackground(ForensicTheme.WARNING_BG);
+        verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.WARNING_BORDER, 1));
+        verdictBannerLabel.setForeground(ForensicTheme.WARNING_AMBER);
+    }
+
+    private void markCancellationConfirmed(AnalysisRun run) {
+        run.cancellationRequested = false;
+        run.cancellationConfirmed = true;
+        run.retainedMultimodalJson = null;
+        cancelButton.setEnabled(false);
+        analyzeButton.setEnabled(true);
+        baselineButton.setEnabled(true);
+        statusBadge.setStatus(JobStatus.CANCELLED);
+        stageLabel.setText("Analysis cancelled by operator.");
+        verdictBannerLabel.setText("ANALYSIS CANCELLED BY OPERATOR");
+        verdictBannerPanel.setBackground(ForensicTheme.NEUTRAL_BG);
+        verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.NEUTRAL_BORDER, 1));
+        verdictBannerLabel.setForeground(ForensicTheme.NEUTRAL_SLATE);
+    }
+
+    private void reconcileCancellationFailure(AnalysisRun run, String detail) {
+        run.cancellationRequested = false;
+        stageLabel.setText("Cancellation not confirmed: " + detail);
+        verdictBannerLabel.setText("CANCELLATION REJECTED — RECONCILING WITH ENGINE STATE");
+        verdictBannerPanel.setBackground(ForensicTheme.WARNING_BG);
+        verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.WARNING_BORDER, 1));
+        verdictBannerLabel.setForeground(ForensicTheme.WARNING_AMBER);
+
+        if (run.jobId == null) {
+            cancelButton.setEnabled(false);
+            return;
+        }
+
+        orchestrator.getJob(run.jobId)
+                .thenAccept(job -> SwingUtilities.invokeLater(() -> {
+                    if (!isActiveRun(run)) return;
+                    reconcileWithJob(run, job);
+                }))
+                .exceptionally(throwable -> {
+                    SwingUtilities.invokeLater(() -> {
+                        if (!isActiveRun(run)) return;
+                        cancelButton.setEnabled(true);
+                        stageLabel.setText("Cancellation failed and job state could not be refreshed: " + detail);
+                    });
+                    return null;
+                });
+    }
+
+    private void reconcileWithJob(AnalysisRun run, AnalysisJob job) {
+        if (run.cancellationRequested) {
+            // A newer cancellation request is pending; let its own callback win.
+            return;
+        }
+        if (job.getStatus() == JobStatus.CANCELLED) {
+            markCancellationConfirmed(run);
+            return;
+        }
+        if (job.getStatus().isTerminal()) {
+            renderJobState(job);
+            applyRetainedMultimodal(run, job.getStatus());
+            return;
+        }
+
+        cancelButton.setEnabled(true);
+        statusBadge.setStatus(job.getStatus());
+
+        boolean retainedApplied = applyRetainedMultimodal(run, job.getStatus());
+        String state = job.getStatus().name().toLowerCase(java.util.Locale.ROOT);
+        if (retainedApplied) {
+            stageLabel.setText("Cancellation rejected — job is still " + state
+                    + "; retained analysis result displayed.");
+        } else {
+            stageLabel.setText("Cancellation rejected — job is still " + state + ".");
+            verdictBannerLabel.setText("CANCELLATION REJECTED — ANALYSIS STILL ACTIVE");
+            verdictBannerPanel.setBackground(ForensicTheme.WARNING_BG);
+            verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.WARNING_BORDER, 1));
+            verdictBannerLabel.setForeground(ForensicTheme.WARNING_AMBER);
+        }
+    }
+
+    private boolean applyRetainedMultimodal(AnalysisRun run, JobStatus backendStatus) {
+        String retained = run.retainedMultimodalJson;
+        if (retained == null) {
+            return false;
+        }
+        if (backendStatus == JobStatus.CANCELLED || backendStatus == JobStatus.FAILED) {
+            run.retainedMultimodalJson = null;
+            return false;
+        }
+        run.retainedMultimodalJson = null;
+        applyMultimodalReport(retained, run.videoPath);
+        return true;
+    }
+
+    private boolean isActiveRun(AnalysisRun run) {
+        AnalysisRun current = activeRun;
+        return current != null && current.id == run.id;
+    }
+
+    private static Throwable rootCause(Throwable throwable) {
+        Throwable root = throwable;
+        while (root.getCause() != null && root != root.getCause()) {
+            root = root.getCause();
+        }
+        return root;
+    }
+
+    private static String rootCauseMessage(Throwable throwable) {
+        Throwable root = rootCause(throwable);
+        return root.getMessage() != null ? root.getMessage() : root.toString();
     }
 
     public void runBaselineAnalysis() {
@@ -677,19 +854,38 @@ public class ForensicStudioView extends JPanel {
     }
 
     private void onJobUpdate(AnalysisJob job) {
-        if (currentJobId == null || !currentJobId.equals(job.getId())) return;
-
         SwingUtilities.invokeLater(() -> {
-            progressBar.setValue((int) job.getProgressPercentage());
-            stageLabel.setText("Stage: " + job.getStage().getLabel());
-            statusBadge.setStatus(job.getStatus());
+            AnalysisRun run = activeRun;
+            if (run == null || run.jobId == null || !run.jobId.equals(job.getId())) {
+                return;
+            }
+            renderJobState(job);
+        });
+    }
 
-            if (job.getStatus().isTerminal()) {
+    private void renderJobState(AnalysisJob job) {
+        AnalysisRun run = activeRun;
+        if (run != null && run.cancellationConfirmed) {
+            if (!job.getStatus().isTerminal()) {
+                return;
+            }
+            if (job.getStatus() == JobStatus.CANCELLED) {
                 analyzeButton.setEnabled(true);
                 cancelButton.setEnabled(false);
+                return;
+            }
+        }
 
-                if (job.getStatus() == JobStatus.COMPLETED && job.getResult().isPresent()) {
-                    var r = job.getResult().get();
+        progressBar.setValue((int) job.getProgressPercentage());
+        stageLabel.setText("Stage: " + job.getStage().getLabel());
+        statusBadge.setStatus(job.getStatus());
+
+        if (job.getStatus().isTerminal()) {
+            analyzeButton.setEnabled(true);
+            cancelButton.setEnabled(false);
+
+            if (job.getStatus() == JobStatus.COMPLETED && job.getResult().isPresent()) {
+                var r = job.getResult().get();
                     String scoreText = r.isAuthenticityAssessed()
                             ? String.format(java.util.Locale.ROOT, "%.3f", r.overallAuthenticityScore())
                             : "N/A (Physiological Only)";
@@ -760,7 +956,6 @@ public class ForensicStudioView extends JPanel {
                     verdictArea.setText("Job Failed:\n" + job.getErrorMessage().orElse("Unknown error"));
                 }
             }
-        });
     }
 
     public void setTargetVideoPath(String path) {
@@ -799,43 +994,86 @@ public class ForensicStudioView extends JPanel {
         // Visual model
         java.util.Optional<String> vBlock = org.biotrace.client.service.api.JsonHelper.getObject(json, "visual_model");
         String vPred = vBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getString(b, "prediction")).orElse("UNKNOWN");
-        double vFake = vBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "fake_score")).orElse(0.0);
+        java.util.Optional<Double> vFakeOpt = vBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "fake_score"));
         double vMeanLogit = vBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "mean_logit_score")).orElse(0.0);
-        long vFrames = vBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getLong(b, "sampled_frames_count")).orElse(10L);
+        long vFrames = vBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getLong(b, "sampled_frames_count")).orElse(0L);
+        boolean visualAvailable = isClassified(vPred) && vFakeOpt.isPresent();
 
         // Physiological model
         java.util.Optional<String> pBlock = org.biotrace.client.service.api.JsonHelper.getObject(json, "physiological_model");
         String pPred = pBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getString(b, "prediction")).orElse("UNKNOWN");
-        double pFake = pBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "fake_score")).orElse(0.0);
-        double pThresh = pBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "operating_threshold")).orElse(0.5128);
+        String pReportedStatus = pBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getString(b, "status")).orElse("");
+        String pStatus = resolveModelStatus(pReportedStatus, pPred);
+        java.util.Optional<Double> pFakeOpt = pBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "fake_score"));
+        java.util.Optional<Double> pThreshOpt = pBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "operating_threshold"));
+        boolean physAvailable = "COMPLETED".equalsIgnoreCase(pStatus)
+                && isClassified(pPred) && pFakeOpt.isPresent();
 
         // Multimodal fusion
         java.util.Optional<String> fBlock = org.biotrace.client.service.api.JsonHelper.getObject(json, "multimodal_fusion");
         String fPred = fBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getString(b, "prediction")).orElse("UNKNOWN");
-        double fScore = fBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "fusion_score")).orElse(0.0);
-        double fThresh = fBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "operating_threshold")).orElse(0.499895);
+        String fReportedStatus = fBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getString(b, "status")).orElse("");
+        String fStatus = resolveModelStatus(fReportedStatus, fPred);
+        java.util.Optional<Double> fScoreOpt = fBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "fusion_score"));
+        java.util.Optional<Double> fThreshOpt = fBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getDouble(b, "operating_threshold"));
         String fUncertainty = fBlock.flatMap(b -> org.biotrace.client.service.api.JsonHelper.getString(b, "uncertainty_level")).orElse("UNASSESSED");
+        boolean fusionAvailable = "COMPLETED".equalsIgnoreCase(fStatus)
+                && isClassified(fPred) && fScoreOpt.isPresent();
 
-        // Update 3 model cards
-        updateModelCard(visualModelBadge, visualModelDetail, vPred, vFake, 0.500, vFrames + " Frames");
-        updateModelCard(physModelBadge, physModelDetail, pPred, pFake, pThresh, "10 Feats");
-        updateModelCard(fusionModelBadge, fusionModelDetail, fPred, fScore, fThresh, fUncertainty);
+        // Update 3 model cards. Unavailable models never render a numeric score.
+        if (visualAvailable) {
+            updateModelCard(visualModelBadge, visualModelDetail, vPred, vFakeOpt.get(), 0.500, vFrames + " Frames");
+        } else {
+            setModelUnavailable(visualModelBadge, visualModelDetail, "Visual model unavailable — no score reported");
+        }
+        if (physAvailable) {
+            updateModelCard(physModelBadge, physModelDetail, pPred, pFakeOpt.get(),
+                    pThreshOpt.orElse(0.5128), "10 Feats");
+        } else {
+            setModelUnavailable(physModelBadge, physModelDetail,
+                    "Physiological status: " + pStatus + " — no score reported");
+        }
+        if (fusionAvailable) {
+            updateModelCard(fusionModelBadge, fusionModelDetail, fPred, fScoreOpt.get(),
+                    fThreshOpt.orElse(0.499895), fUncertainty);
+        } else {
+            setModelUnavailable(fusionModelBadge, fusionModelDetail,
+                    "Fusion status: " + fStatus + " — no score reported");
+        }
 
-        // Update metric badges
-        updateMetricBadge(baselineMetricLabel, "CNN Baseline", String.format(java.util.Locale.ROOT, "%s (%.2f)", vPred, vFake));
-        updateMetricBadge(scoreMetricLabel, "Authenticity Score", String.format(java.util.Locale.ROOT, "%s (%.2f)", fPred, fScore));
+        // Update metric badges without inventing fallback scores.
+        updateMetricBadge(baselineMetricLabel, "CNN Baseline",
+                visualAvailable
+                        ? String.format(java.util.Locale.ROOT, "%s (%.2f)", vPred, vFakeOpt.get())
+                        : "Unavailable");
+        updateMetricBadge(scoreMetricLabel, "Authenticity Score",
+                fusionAvailable
+                        ? String.format(java.util.Locale.ROOT, "%s (%.2f)", fPred, fScoreOpt.get())
+                        : "Unavailable");
 
-        // Update headline verdict banner
-        if ("FAKE".equalsIgnoreCase(overallVerdict)) {
-            verdictBannerLabel.setText(String.format(java.util.Locale.ROOT, "MULTIMODAL: MANIPULATED / SYNTHETIC ARTIFACTS CONFIRMED (%.1f%%)", fScore * 100));
+        // Update headline verdict banner only for a completed fusion result.
+        if (!fusionAvailable) {
+            verdictBannerLabel.setText(visualAvailable
+                    ? "MULTIMODAL FUSION UNAVAILABLE — VISUAL EVIDENCE ONLY"
+                    : "MULTIMODAL RESULTS UNAVAILABLE — NO SCORES REPORTED");
+            verdictBannerPanel.setBackground(ForensicTheme.WARNING_BG);
+            verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.WARNING_BORDER, 1));
+            verdictBannerLabel.setForeground(ForensicTheme.WARNING_AMBER);
+        } else if ("FAKE".equalsIgnoreCase(overallVerdict)) {
+            verdictBannerLabel.setText(String.format(java.util.Locale.ROOT, "MULTIMODAL: MANIPULATED / SYNTHETIC ARTIFACTS CONFIRMED (%.1f%%)", fScoreOpt.get() * 100));
             verdictBannerPanel.setBackground(ForensicTheme.ALERT_BG);
             verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.ALERT_BORDER, 1));
             verdictBannerLabel.setForeground(ForensicTheme.ALERT_RED);
         } else if ("REAL".equalsIgnoreCase(overallVerdict)) {
-            verdictBannerLabel.setText(String.format(java.util.Locale.ROOT, "MULTIMODAL: AUTHENTIC / BIOLOGICALLY CONSISTENT (%.1f%%)", (1.0 - fScore) * 100));
+            verdictBannerLabel.setText(String.format(java.util.Locale.ROOT, "MULTIMODAL: AUTHENTIC / BIOLOGICALLY CONSISTENT (%.1f%%)", (1.0 - fScoreOpt.get()) * 100));
             verdictBannerPanel.setBackground(ForensicTheme.SUCCESS_BG);
             verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.SUCCESS_BORDER, 1));
             verdictBannerLabel.setForeground(ForensicTheme.SUCCESS_GREEN);
+        } else {
+            verdictBannerLabel.setText("MULTIMODAL VERDICT UNASSESSED — NO SCORE REPORTED");
+            verdictBannerPanel.setBackground(ForensicTheme.WARNING_BG);
+            verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.WARNING_BORDER, 1));
+            verdictBannerLabel.setForeground(ForensicTheme.WARNING_AMBER);
         }
 
         // Update waveform telemetry
@@ -850,8 +1088,23 @@ public class ForensicStudioView extends JPanel {
             }
         }
 
-        // Format readable forensic evidence synthesis
+        // Format readable forensic evidence synthesis without substituting scores
+        // for models that did not complete.
         String waveformDetail = signalOpt.map(s -> s.size() + " empirical samples across " + String.format(java.util.Locale.ROOT, "%.2fs", s.points().get(s.points().size() - 1).timestampSeconds()) + " (Range: [" + String.format(java.util.Locale.ROOT, "%.3f, %.3f", s.getMinValue(), s.getMaxValue()) + "])").orElse("No signal telemetry recovered");
+
+        String vPredDisplay = visualAvailable ? vPred : "UNAVAILABLE";
+        String vFakeDisplay = visualAvailable ? String.format(java.util.Locale.ROOT, "%.4f", vFakeOpt.get()) : "—";
+        String vMeanLogitDisplay = visualAvailable ? String.format(java.util.Locale.ROOT, "%.4f", vMeanLogit) : "—";
+        String vFramesDisplay = visualAvailable ? String.valueOf(vFrames) : "—";
+        String pPredDisplay = physAvailable ? pPred : "UNAVAILABLE";
+        String pFakeDisplay = physAvailable ? String.format(java.util.Locale.ROOT, "%.4f", pFakeOpt.get()) : "—";
+        String pThreshDisplay = physAvailable ? String.format(java.util.Locale.ROOT, "%.4f", pThreshOpt.orElse(0.5128)) : "—";
+        String fPredDisplay = fusionAvailable ? fPred : "UNAVAILABLE";
+        String fScoreDisplay = fusionAvailable ? String.format(java.util.Locale.ROOT, "%.4f", fScoreOpt.get()) : "—";
+        String fThreshDisplay = fusionAvailable ? String.format(java.util.Locale.ROOT, "%.4f", fThreshOpt.orElse(0.499895)) : "—";
+        String determinationDisplay = fusionAvailable ? overallVerdict : "UNASSESSED (FUSION UNAVAILABLE)";
+        String confidenceDisplay = fusionAvailable ? String.format(java.util.Locale.ROOT, "%.1f%%", overallConf * 100.0) : "—";
+        String uncertaintyDisplay = fusionAvailable ? fUncertainty : "UNASSESSED";
 
         verdictArea.setText(String.format("""
             ======================================================================
@@ -859,28 +1112,30 @@ public class ForensicStudioView extends JPanel {
             ======================================================================
             Target Media: %s
             Final Multimodal Determination: %s
-            Aggregate Decision Confidence: %.1f%% [Uncertainty: %s]
+            Aggregate Decision Confidence: %s [Uncertainty: %s]
 
             1. VISUAL SPATIAL BASELINE (Phase 6 EfficientNet-B0)
                • Classification: %s
-               • Synthetic Likelihood (Fake Score): %.4f (Uncalibrated raw sigmoid)
-               • Video Mean-Logit Score: %.4f
-               • Evaluated Frames: %d uniform frames (224x224 RGB, ImageNet normalized)
+               • Synthetic Likelihood (Fake Score): %s (Uncalibrated raw sigmoid)
+               • Video Mean-Logit Score: %s
+               • Evaluated Frames: %s uniform frames (224x224 RGB, ImageNet normalized)
                • Operating Decision Threshold: 0.5000 (Validation-Derived Only)
 
             2. PHYSIOLOGICAL CONSISTENCY BASELINE (Phase 9 Random Forest)
+               • Status: %s
                • Classification: %s
-               • Synthetic Likelihood (Fake Score): %.4f (Uncalibrated heuristic)
-               • Operating Decision Threshold: %.4f (Validation EER Optimal)
+               • Synthetic Likelihood (Fake Score): %s (Uncalibrated heuristic)
+               • Operating Decision Threshold: %s (Validation EER Optimal)
                • Evaluated Features: 10 physiological measurements
                  - Facial Kinematics: EAR bilateral std, velocity mean, opening vel max
                  - Sub-dermal Chromatic Consistency: POS/CHROM correlation, SNR, peak freq
                  - Bilateral Asymmetry: Dynamic blink asymmetry mean & std
 
             3. CONTROLLED MULTIMODAL EVIDENCE FUSION (Phase 10 Logistic Regression)
+               • Status: %s
                • Unified Multimodal Verdict: %s
-               • Posterior Synthetic Probability: %.4f (Uncalibrated standardized score)
-               • Operating Decision Threshold: %.4f (Validation-Tuned EER Threshold)
+               • Posterior Synthetic Probability: %s (Uncalibrated standardized score)
+               • Operating Decision Threshold: %s (Validation-Tuned EER Threshold)
                • Model Weights: Visual = 1.3838, Physiological = 0.7668, Intercept = 0.0000
 
             4. SIGNAL WAVEFORM TELEMETRY & FACE TRACKING
@@ -895,14 +1150,32 @@ public class ForensicStudioView extends JPanel {
             ======================================================================
             """,
             pathStr,
-            overallVerdict,
-            overallConf * 100,
-            fUncertainty,
-            vPred, vFake, vMeanLogit, vFrames,
-            pPred, pFake, pThresh,
-            fPred, fScore, fThresh,
+            determinationDisplay,
+            confidenceDisplay,
+            uncertaintyDisplay,
+            vPredDisplay, vFakeDisplay, vMeanLogitDisplay, vFramesDisplay,
+            pStatus, pPredDisplay, pFakeDisplay, pThreshDisplay,
+            fStatus, fPredDisplay, fScoreDisplay, fThreshDisplay,
             telemetryState,
             waveformDetail
         ));
+    }
+
+    private static boolean isClassified(String prediction) {
+        return "FAKE".equalsIgnoreCase(prediction) || "REAL".equalsIgnoreCase(prediction);
+    }
+
+    private static String resolveModelStatus(String reportedStatus, String prediction) {
+        if (reportedStatus != null && !reportedStatus.isBlank()
+                && !"UNKNOWN".equalsIgnoreCase(reportedStatus)) {
+            return reportedStatus;
+        }
+        return isClassified(prediction) ? "COMPLETED" : "UNAVAILABLE";
+    }
+
+    private void setModelUnavailable(JLabel badge, JLabel detail, String reason) {
+        badge.setText("UNAVAILABLE");
+        badge.setForeground(ForensicTheme.WARNING_AMBER);
+        detail.setText(reason);
     }
 }

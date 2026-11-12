@@ -9,6 +9,7 @@ Scientific Verification Protocol:
        diagnostic states (INSUFFICIENT_DATA, LOW_QUALITY_SIGNAL), never false manipulation flags.
 """
 
+from pathlib import Path
 import threading
 import numpy as np
 import pytest
@@ -23,6 +24,7 @@ from biotrace.spatial_consistency.domain import (
     RegionTrackingStatus,
     SpatialConsistencyConfig,
 )
+
 from biotrace.spatial_consistency.extractor import SpatialConsistencyExtractor
 from biotrace.spatial_consistency.quality import (
     assess_regional_signal,
@@ -35,6 +37,8 @@ from biotrace.spatial_consistency.spatial_analyzer import (
     compute_lagged_cross_correlation,
     compute_spectral_overlap,
 )
+
+SYNTHETIC_VIDEO = Path(__file__).resolve().parents[2] / "datasets" / "test_synthetic.mp4"
 
 
 def _make_synthetic_rgb_stream(
@@ -449,12 +453,15 @@ def test_job_manager_integration_spatial_consistency():
     from biotrace.services.video_inspector import VideoInspector
     import time
 
+    if not SYNTHETIC_VIDEO.exists():
+        pytest.skip(f"Test video {SYNTHETIC_VIDEO} not found")
+
     settings = Settings()
     inspector = VideoInspector(settings)
     jm = JobManager(settings, inspector)
 
     req = JobCreationRequest(
-        video_path="datasets/test_synthetic.mp4",
+        video_path=str(SYNTHETIC_VIDEO),
         requested_modalities=[ForensicModality.SPATIAL_CONSISTENCY],
     )
     job = jm.submit_job(req)
@@ -487,6 +494,9 @@ def test_spatial_consistency_failure_isolation():
     from biotrace.services.video_inspector import VideoInspector
     import time
 
+    if not SYNTHETIC_VIDEO.exists():
+        pytest.skip(f"Test video {SYNTHETIC_VIDEO} not found")
+
     mock_spatial = MagicMock()
     mock_spatial.extract.side_effect = RuntimeError("Simulated spatial module failure")
 
@@ -495,7 +505,7 @@ def test_spatial_consistency_failure_isolation():
     jm = JobManager(settings, inspector, spatial_consistency_extractor=mock_spatial)
 
     req = JobCreationRequest(
-        video_path="datasets/test_synthetic.mp4",
+        video_path=str(SYNTHETIC_VIDEO),
         requested_modalities=[ForensicModality.RPPG, ForensicModality.SPATIAL_CONSISTENCY],
     )
     job = jm.submit_job(req)

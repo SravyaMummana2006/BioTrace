@@ -17,6 +17,11 @@ public interface JobOrchestrator {
     CompletableFuture<AnalysisJob> startAnalysis(Path videoPath, List<String> modalities);
 
     /**
+     * Retrieves the authoritative current state of an analysis job from the engine.
+     */
+    CompletableFuture<AnalysisJob> getJob(String jobId);
+
+    /**
      * Cancels an ongoing analysis job.
      */
     CompletableFuture<Boolean> cancelAnalysis(String jobId);

@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import cv2
-import mediapipe as mp
 import numpy as np
 import pandas as pd
 
@@ -34,6 +33,7 @@ from biotrace.rppg.face_tracker import (
 )
 from biotrace.rppg.filtering import compute_welch_psd, find_dominant_cardiac_peak
 from biotrace.rppg.quality import calculate_de_haan_snr
+from biotrace.vision.mediapipe_compat import create_face_mesh
 
 logging.basicConfig(
     level=logging.INFO,
@@ -122,9 +122,8 @@ def extract_video_features(task: Dict[str, Any]) -> Dict[str, Any]:
     asym_list: List[float] = []
     rgb_traces: List[np.ndarray] = []
 
-    # Use MediaPipe FaceMesh in single-pass mode
-    mp_face_mesh = mp.solutions.face_mesh
-    face_mesh = mp_face_mesh.FaceMesh(
+    # Use MediaPipe face landmarks in single-pass mode
+    face_mesh = create_face_mesh(
         max_num_faces=1,
         refine_landmarks=False,
         min_detection_confidence=0.5,
