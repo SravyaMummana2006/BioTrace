@@ -193,7 +193,7 @@ public class SystemStatusView extends JPanel {
                         latencyLabel.setText("Timeout / Refused");
                         lastCheckLabel.setText("Last verified: Offline");
                         modalitiesArea.setText("Connection Notice:\n"
-                                + "Cannot connect to FastAPI engine on http://127.0.0.1:8000\n\n"
+                                + "Cannot connect to FastAPI engine at the configured endpoint\n\n"
                                 + "To start the AI backend, execute:\n"
                                 + "  uvicorn biotrace.main:app --host 127.0.0.1 --port 8000\n\n"
                                 + "Error details:\n  " + throwable.getMessage());

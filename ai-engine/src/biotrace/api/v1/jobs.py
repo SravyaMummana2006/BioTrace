@@ -35,7 +35,12 @@ def submit_job(
 ) -> JobCreationResponse:
     """Submits a target video for biological & temporal forensic analysis."""
     # Pre-validate file path accessibility before enqueuing
-    target_str = request.video_path.strip()
+    target_str = request.video_path
+    if not target_str.strip():
+        raise HTTPException(
+            status_code=422,
+            detail="Video path must not be blank.",
+        )
     try:
         target_path = Path(target_str).resolve()
         try:
@@ -43,6 +48,11 @@ def submit_job(
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Video media file not found at path: '{target_str}'. Ensure the file exists.",
+                )
+            if not target_path.is_file():
+                raise HTTPException(
+                    status_code=422,
+                    detail="Video path must point to a file.",
                 )
         except PermissionError as pe:
             raise HTTPException(

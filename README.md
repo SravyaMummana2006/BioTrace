@@ -164,103 +164,51 @@ Forensic Studio detecting synthetic facial manipulation:
 ## 7. Installation & Quickstart
 
 ### Prerequisites
-1. **Java Development Kit**: JDK 21 or higher installed and on your `PATH` (or configured via `JAVA_HOME`).
-2. **Python**: Python 3.11–3.13 (with `pip`) installed and available. MediaPipe 1.2+ is required; current Apple Silicon wheels ship the Tasks API only.
-3. **Git**.
 
-### macOS (Apple Silicon) — Verified Setup
+- JDK 21 or newer, available on `PATH` or through `JAVA_HOME`.
+- Apache Maven on `PATH`.
+- Python 3.11–3.13 with pip.
+- Git to clone the repository.
 
-These commands are the reproducible clean-checkout path. Run them from the repository root:
+Run the following commands from the repository root.
+
+### Windows
+
+One-time setup in PowerShell (shown with Python 3.13):
+
+```powershell
+py -3.13 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r ai-engine/requirements.txt
+.\.venv\Scripts\python.exe scripts/download_models.py
+```
+
+Start BioTrace with one command in PowerShell or Command Prompt:
+
+```powershell
+.\run_workstation.bat
+```
+
+You can also double-click `run_workstation.bat` in File Explorer.
+
+### macOS (Apple Silicon)
+
+One-time setup (use a supported Python version):
 
 ```bash
-# 1. Create an isolated environment (use python3.11, python3.12, or python3.13)
 python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-
-# 2. Install the AI engine dependencies (MediaPipe Tasks API + PyTorch + OpenCV)
-pip install -r ai-engine/requirements.txt
-
-# 3. Download and verify required model assets
-#    (the MediaPipe face landmarker is downloaded, not committed)
-python scripts/download_models.py
-python scripts/download_models.py --check
-
-# 4. Terminal 1: start the FastAPI AI engine
-PYTHONPATH=ai-engine/src python -m uvicorn biotrace.main:create_app \
-  --factory --app-dir ai-engine/src --host 127.0.0.1 --port 8000
-
-# 5. Terminal 2: verify the health endpoint
-curl -s http://127.0.0.1:8000/api/v1/health
-
-# 6. Terminal 2: launch the Java desktop client
-cd java-client
-mvn compile exec:java
+.venv/bin/python -m pip install -r ai-engine/requirements.txt
+.venv/bin/python scripts/download_models.py
 ```
 
-Expected health response includes `"status":"healthy"` and the Python/Torch versions. Expected model files:
+Start BioTrace with one command:
 
-- `ai-engine/models/baseline/best_model.pth`
-- `ai-engine/models/physiological/best_model.joblib`
-- `ai-engine/models/physiological/preprocessor.joblib`
-- `ai-engine/models/fusion/phase10_fusion.joblib`
-- `ai-engine/models/mediapipe/face_landmarker.task` (created by `scripts/download_models.py`)
-
-If `python3` resolves to Python 3.14+, select an explicit supported interpreter (for example `python3.13 -m venv .venv`). The pinned requirement range is `requires-python = ">=3.11,<3.14"`.
-
-The legacy `mediapipe.solutions.face_mesh` API is not present in current macOS ARM wheels. BIOTrace now uses the supported MediaPipe Tasks `FaceLandmarker` through `biotrace.vision.mediapipe_compat`.
-
----
-
-### Option A: Unified One-Click Launch (Recommended)
-
-BIOTrace provides a unified workstation launcher (`run_workstation.bat` / `run_workstation.ps1`) that coordinates full startup: it automatically launches the FastAPI AI engine in the background, waits for deep learning models (PyTorch, MediaPipe, OpenCV) to complete initialization (~35–45 seconds on Windows), verifies the HTTP 200 health check, and launches the Java Desktop Forensic Studio once the engine is verified `ONLINE`:
-
-```powershell
-# 1. Clone repository
-git clone https://github.com/SravyaMummana2006/BioTrace.git
-cd BioTrace
-
-# 2. Launch Unified Workstation:
-# Simply double-click run_workstation.bat (or run in PowerShell):
-.\run_workstation.ps1
+```bash
+./run_workstation.sh
 ```
 
----
+On both platforms, the launcher starts the FastAPI backend on a free loopback port, waits for its health check, and opens the Java desktop client. Closing the desktop client stops the backend started by that launcher. Use the same command for subsequent launches.
 
-### Option B: Two-Terminal Manual Setup
-
-If you prefer running the backend and frontend in separate dedicated terminal windows:
-
-#### Terminal 1 — Start the Python AI Engine Backend:
-> **Model assets:** Run `python scripts/download_models.py` once after installing dependencies. It downloads and verifies the MediaPipe face-landmarker model required by the current MediaPipe Tasks API. The checked-in EfficientNet/Random-Forest/fusion weights are verified by the same command.
-
-> **Windows Tip:** If your machine has Python 3.14+ set as the default in `PATH`, running standard `python` will fail because the supported Python range is 3.11–3.13. Always use `run_backend.bat` or target the `.venv` executable directly:
-
-```powershell
-# Option 1 (Easiest): Double-click run_backend.bat or run:
-.\run_backend.ps1
-
-# Option 2 (Direct PowerShell command using the pre-configured Python 3.11 virtualenv):
-.\ai-engine\.venv\Scripts\python.exe -m uvicorn biotrace.main:create_app --factory --app-dir ai-engine\src --host 127.0.0.1 --port 8000
-```
-
-*Wait approximately 30–45 seconds until the terminal displays:*
-`INFO: Uvicorn running on http://127.0.0.1:8000` and Swagger UI is live at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
-
-#### Terminal 2 — Launch the Java Desktop Forensic Studio:
-Once the AI backend is running on port 8000:
-
-```powershell
-# Double-click run_client.bat or run in PowerShell:
-.\run_client.ps1
-
-# Or run using Maven directly:
-cd java-client
-mvn compile exec:java
-```
-
-The Java Forensic Studio will open with a green `ENGINE: ONLINE (v0.1.0)` status badge in the top-right header and is immediately ready to ingest media and execute analysis pipelines.
+The model setup script downloads the MediaPipe face landmarker and checks the included visual, physiological, and fusion model artifacts. To verify the assets again, run `scripts/download_models.py --check` with the virtual environment's Python.
 
 ---
 

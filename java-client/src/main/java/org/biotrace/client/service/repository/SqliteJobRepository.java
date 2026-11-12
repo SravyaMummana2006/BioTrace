@@ -32,7 +32,10 @@ public class SqliteJobRepository implements AnalysisJobRepository {
 
     public SqliteJobRepository(String databasePath) {
         this.connectionUrl = "jdbc:sqlite:" + databasePath;
-        initializeSchema();
+        // Each SQLite connection would see a separate :memory: database.
+        if (!":memory:".equals(databasePath)) {
+            initializeSchema();
+        }
     }
 
     /**

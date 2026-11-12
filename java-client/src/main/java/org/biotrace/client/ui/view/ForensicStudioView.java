@@ -570,8 +570,8 @@ public class ForensicStudioView extends JPanel {
                                     + "Please verify that the target media file exists and has read permissions.";
                         } else {
                             verdictBannerLabel.setText("CONNECTION FAILED — ENGINE UNREACHABLE");
-                            detailMsg = "Could not connect to FastAPI Engine on http://127.0.0.1:8000.\n"
-                                    + "Please launch the engine first using 'run_backend.bat' or 'scripts/run_backend.ps1'.\n\n"
+                            detailMsg = "Could not connect to FastAPI Engine at the configured endpoint.\n"
+                                    + "Start BioTrace with the workstation launcher.\n\n"
                                     + "System Error: " + errMsg;
                         }
                         verdictArea.setText(detailMsg);
@@ -847,7 +847,7 @@ public class ForensicStudioView extends JPanel {
                         String errMsg = root.getMessage() != null ? root.getMessage() : root.toString();
                         stageLabel.setText("Baseline Error: " + errMsg);
                         verdictArea.setText("Baseline Prediction Failed:\n" + errMsg
-                                + "\n\nEnsure FastAPI engine is running on http://127.0.0.1:8000 (run 'run_backend.bat').");
+                                + "\n\nEnsure FastAPI engine is running at the configured endpoint.");
                     });
                     return null;
                 });

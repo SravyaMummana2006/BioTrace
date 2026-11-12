@@ -10,12 +10,15 @@ import org.biotrace.client.ui.theme.ForensicTheme;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.table.AbstractTableModel;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.HierarchyEvent;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Modern research-grade historical forensic audit view displaying persisted investigation logs.
@@ -29,7 +32,12 @@ public class HistoryAuditView extends JPanel {
             .withZone(ZoneId.systemDefault());
 
     private final transient AnalysisJobRepository repository;
-    private final DefaultTableModel tableModel;
+    private final AbstractTableModel tableModel;
+    private List<Object[]> rows = List.of();
+    private boolean refreshing;
+    private boolean refreshPending;
+
+    private record AuditSnapshot(List<Object[]> rows, int total) {}
     private final JTable table;
     private final JTextField searchField;
     private final JComboBox<String> statusFilter;
@@ -112,10 +120,25 @@ public class HistoryAuditView extends JPanel {
         // 2. AUDIT LOG TABLE
         // =========================================================================
         String[] columnNames = {"Job UUID", "Target Media File", "Forensic Status", "Pipeline Stage", "Progress", "Ingestion Timestamp"};
-        tableModel = new DefaultTableModel(columnNames, 0) {
+        tableModel = new AbstractTableModel() {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
+            public int getRowCount() {
+                return rows.size();
+            }
+
+            @Override
+            public int getColumnCount() {
+                return columnNames.length;
+            }
+
+            @Override
+            public String getColumnName(int column) {
+                return columnNames[column];
+            }
+
+            @Override
+            public Object getValueAt(int row, int column) {
+                return rows.get(row)[column];
             }
         };
 
@@ -216,43 +239,67 @@ public class HistoryAuditView extends JPanel {
 
         add(card, BorderLayout.CENTER);
 
-        eventBus.subscribe(AnalysisJob.class, job -> SwingUtilities.invokeLater(this::refreshData));
-
-        refreshData();
+        eventBus.subscribe(AnalysisJob.class, job -> SwingUtilities.invokeLater(() -> {
+            if (isShowing()) {
+                refreshData();
+            }
+        }));
+        addHierarchyListener(event -> {
+            if ((event.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0 && isShowing()) {
+                refreshData();
+            }
+        });
     }
 
     public void refreshData() {
-        String query = searchField.getText();
-        String selectedStatus = (String) statusFilter.getSelectedItem();
-
-        List<AnalysisJob> allJobs = repository.findAll();
-        List<AnalysisJob> jobs = allJobs.stream()
-                .filter(j -> {
-                    if (query != null && !query.isBlank()) {
-                        return j.getFileName().toLowerCase().contains(query.toLowerCase());
-                    }
-                    return true;
-                })
-                .filter(j -> {
-                    if (selectedStatus != null && !"ALL".equals(selectedStatus)) {
-                        return j.getStatus().name().equalsIgnoreCase(selectedStatus);
-                    }
-                    return true;
-                })
-                .toList();
-
-        tableModel.setRowCount(0);
-        for (AnalysisJob j : jobs) {
-            tableModel.addRow(new Object[]{
-                    j.getId(),
-                    j.getFileName(),
-                    j.getStatus().name(),
-                    j.getStage().name(),
-                    String.format(java.util.Locale.ROOT, "%.1f%%", j.getProgressPercentage()),
-                    TIME_FMT.format(j.getCreatedAt())
-            });
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(this::refreshData);
+            return;
         }
+        if (refreshing) {
+            refreshPending = true;
+            return;
+        }
+        refreshing = true;
+        String query = searchField.getText().toLowerCase(Locale.ROOT);
+        String status = (String) statusFilter.getSelectedItem();
 
-        countLabel.setText(String.format("Displaying %d of %d total forensic cases", jobs.size(), allJobs.size()));
+        new SwingWorker<AuditSnapshot, Void>() {
+            @Override
+            protected AuditSnapshot doInBackground() {
+                List<AnalysisJob> allJobs = repository.findAll();
+                List<Object[]> matchingRows = allJobs.stream()
+                        .filter(job -> query.isBlank() || job.getFileName().toLowerCase(Locale.ROOT).contains(query))
+                        .filter(job -> status == null || "ALL".equals(status) || job.getStatus().name().equals(status))
+                        .map(job -> new Object[]{
+                                job.getId(), job.getFileName(), job.getStatus().name(), job.getStage().name(),
+                                String.format(Locale.ROOT, "%.1f%%", job.getProgressPercentage()),
+                                TIME_FMT.format(job.getCreatedAt())
+                        })
+                        .toList();
+                return new AuditSnapshot(matchingRows, allJobs.size());
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    AuditSnapshot snapshot = get();
+                    rows = snapshot.rows();
+                    tableModel.fireTableDataChanged();
+                    countLabel.setText(String.format("Displaying %d of %d total forensic cases",
+                            rows.size(), snapshot.total()));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } catch (ExecutionException e) {
+                    countLabel.setText("Could not refresh audit history");
+                } finally {
+                    refreshing = false;
+                    if (refreshPending) {
+                        refreshPending = false;
+                        refreshData();
+                    }
+                }
+            }
+        }.execute();
     }
 }

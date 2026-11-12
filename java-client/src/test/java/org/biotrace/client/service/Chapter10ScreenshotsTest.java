@@ -41,6 +41,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -725,16 +727,24 @@ public class Chapter10ScreenshotsTest {
     @Order(8)
     @DisplayName("Figure 10.8: Audit Trail & History View with Case Filtering")
     void captureFigure10_8_AuditTrailAndHistory() throws Exception {
+        CountDownLatch auditLoaded = new CountDownLatch(1);
         SwingUtilities.invokeAndWait(() -> {
-            mainFrame.showView("VIEW_AUDIT");
             HistoryAuditView auditView = (HistoryAuditView) mainFrame.getWorkspaceDeck().getComponent(1);
-            
-            // Explicitly call refreshData so all 6 stored cases are loaded from repository
+            JPanel content = ((ScientificCard) auditView.getComponent(0)).getContentPanel();
+            JScrollPane scrollPane = (JScrollPane) ((BorderLayout) content.getLayout())
+                    .getLayoutComponent(BorderLayout.CENTER);
+            JTable auditTable = (JTable) scrollPane.getViewport().getView();
+            auditTable.getModel().addTableModelListener(event -> {
+                if (auditTable.getRowCount() > 0) {
+                    auditLoaded.countDown();
+                }
+            });
+            mainFrame.showView("VIEW_AUDIT");
             auditView.refreshData();
-            
             mainFrame.validate();
             mainFrame.repaint();
         });
+        assertTrue(auditLoaded.await(5, TimeUnit.SECONDS), "Audit history should load before capture");
 
         Path out = SCREENSHOTS_DIR.resolve("figure_10_8_audit_history.png");
         captureFrame(mainFrame, out);

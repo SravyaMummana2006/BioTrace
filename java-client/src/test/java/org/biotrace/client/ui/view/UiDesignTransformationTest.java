@@ -46,9 +46,9 @@ class UiDesignTransformationTest {
         assertNotNull(ForensicTheme.TEXT_PRIMARY);
 
         // Verify fonts
-        assertEquals("Segoe UI", ForensicTheme.FONT_TITLE.getFamily());
+        assertEquals("Segoe UI", ForensicTheme.FONT_TITLE.getName());
         assertEquals(Font.BOLD, ForensicTheme.FONT_TITLE.getStyle());
-        assertEquals("Consolas", ForensicTheme.FONT_CODE.getFamily());
+        assertEquals("Consolas", ForensicTheme.FONT_CODE.getName());
 
         // Verify borders
         assertNotNull(ForensicTheme.createCardBorder());

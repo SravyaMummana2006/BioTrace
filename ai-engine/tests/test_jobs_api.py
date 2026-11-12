@@ -26,6 +26,12 @@ def test_submit_job_api(client: TestClient, sample_video: Path):
     assert status_data["job_id"] == job_id
 
 
+def test_submit_job_rejects_blank_paths_and_directories(client: TestClient, tmp_path: Path):
+    for video_path in ("", "   ", str(tmp_path)):
+        response = client.post("/api/v1/jobs", json={"video_path": video_path})
+        assert response.status_code == 422
+
+
 def test_get_nonexistent_job(client: TestClient):
     response = client.get("/api/v1/jobs/non_existent_id")
     assert response.status_code == 404

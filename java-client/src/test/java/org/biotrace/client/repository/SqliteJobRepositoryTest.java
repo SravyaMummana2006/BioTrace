@@ -7,6 +7,7 @@ import org.biotrace.client.service.repository.SqliteJobRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -34,6 +35,16 @@ class SqliteJobRepositoryTest {
         assertTrue(found.isPresent());
         assertEquals("job-101", found.get().getId());
         assertEquals("suspect_01.mp4", found.get().getFileName());
+    }
+
+    @Test
+    void testPersistsAcrossRepositoryInstances(@TempDir Path tempDir) {
+        String database = tempDir.resolve("jobs.db").toString();
+        SqliteJobRepository writer = new SqliteJobRepository(database);
+        writer.save(new AnalysisJob("job-persisted", Path.of("video.mp4")));
+
+        SqliteJobRepository reader = new SqliteJobRepository(database);
+        assertEquals("video.mp4", reader.findById("job-persisted").orElseThrow().getFileName());
     }
 
     @Test

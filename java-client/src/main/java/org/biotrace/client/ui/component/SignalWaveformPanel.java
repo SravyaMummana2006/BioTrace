@@ -77,6 +77,7 @@ public class SignalWaveformPanel extends JPanel {
         renderer.setSeriesPaint(0, primaryTrace);
         renderer.setSeriesStroke(0, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         renderer.setSeriesShapesVisible(0, false);
+        renderer.setDrawSeriesLineAsPath(true);
         plot.setRenderer(renderer);
 
         NumberAxis domainAxis = (NumberAxis) plot.getDomainAxis();
@@ -158,29 +159,34 @@ public class SignalWaveformPanel extends JPanel {
     }
 
     public void updateSignal(ForensicSignal signal) {
-        series.clear();
-        if (signal != null && !signal.points().isEmpty()) {
-            double min = Double.MAX_VALUE;
-            double max = -Double.MAX_VALUE;
-            double firstTs = signal.points().get(0).timestampSeconds();
-            double lastTs = signal.points().get(signal.points().size() - 1).timestampSeconds();
-            double duration = Math.max(0.0, lastTs - firstTs);
+        series.setNotify(false);
+        try {
+            series.clear();
+            if (signal != null && !signal.points().isEmpty()) {
+                double min = Double.MAX_VALUE;
+                double max = -Double.MAX_VALUE;
+                double firstTs = signal.points().get(0).timestampSeconds();
+                double lastTs = signal.points().get(signal.points().size() - 1).timestampSeconds();
+                double duration = Math.max(0.0, lastTs - firstTs);
 
-            for (SignalPoint p : signal.points()) {
-                series.add(p.timestampSeconds(), p.value());
-                if (p.value() < min) min = p.value();
-                if (p.value() > max) max = p.value();
+                for (SignalPoint p : signal.points()) {
+                    series.add(p.timestampSeconds(), p.value(), false);
+                    if (p.value() < min) min = p.value();
+                    if (p.value() > max) max = p.value();
+                }
+
+                setTelemetryState(TelemetryState.SIGNAL_ACQUIRED, String.format(
+                        java.util.Locale.ROOT,
+                        "Acquired: %s (%s) | Samples: %d | Duration: %.2fs | Range: [%.3f, %.3f]",
+                        signal.signalName().toUpperCase(java.util.Locale.ROOT),
+                        signal.modality().toUpperCase(java.util.Locale.ROOT),
+                        signal.size(), duration, min, max
+                ));
+            } else {
+                setTelemetryState(TelemetryState.SIGNAL_UNAVAILABLE, "Status: Signal unavailable (no reliable facial ROI tracked or non-human media)");
             }
-
-            setTelemetryState(TelemetryState.SIGNAL_ACQUIRED, String.format(
-                    java.util.Locale.ROOT,
-                    "Acquired: %s (%s) | Samples: %d | Duration: %.2fs | Range: [%.3f, %.3f]",
-                    signal.signalName().toUpperCase(java.util.Locale.ROOT),
-                    signal.modality().toUpperCase(java.util.Locale.ROOT),
-                    signal.size(), duration, min, max
-            ));
-        } else {
-            setTelemetryState(TelemetryState.SIGNAL_UNAVAILABLE, "Status: Signal unavailable (no reliable facial ROI tracked or non-human media)");
+        } finally {
+            series.setNotify(true);
         }
     }
 

@@ -1,61 +1,72 @@
-# BIOTrace Unified Workstation Launcher
-# Launches the FastAPI AI Engine, waits for health check, and starts the Desktop Client
+# Start the local FastAPI backend and Java desktop client in one session.
 [CmdletBinding()]
 param()
 
 $ErrorActionPreference = "Stop"
-
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
-if ((Split-Path -Leaf $scriptDir) -eq "scripts") {
-    $rootDir = Split-Path -Parent $scriptDir
-} else {
-    $rootDir = $scriptDir
+$root = $PSScriptRoot
+$python = @(
+    (Join-Path $root ".venv\Scripts\python.exe")
+    (Join-Path $root "ai-engine\.venv\Scripts\python.exe")
+) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+if (-not $python) {
+    throw "BioTrace needs a .venv with the AI engine dependencies. See the Windows setup in README.md."
 }
 
-Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "   BIOTrace Forensic Platform - Unified One-Click Launcher" -ForegroundColor Cyan
-Write-Host "==========================================================" -ForegroundColor Cyan
+$maven = Get-Command mvn.cmd -CommandType Application -ErrorAction SilentlyContinue
+if (-not $maven) {
+    throw "BioTrace needs Maven on PATH and a JDK configured via JAVA_HOME or PATH."
+}
 
-# 1. Check if AI Engine is already running
-$healthUrl = "http://127.0.0.1:8000/api/v1/health"
-$engineReady = $false
-
+# Use a separate loopback port so an existing backend can stay running.
+$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
 try {
-    $resp = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 2 -ErrorAction SilentlyContinue
-    if ($resp.status -eq "healthy") {
-        $engineReady = $true
-        Write-Host "  [OK] AI Engine is already running on http://127.0.0.1:8000" -ForegroundColor Green
-    }
-} catch {}
+    $listener.Start()
+    $port = $listener.LocalEndpoint.Port
+} finally {
+    $listener.Stop()
+}
 
-if (-not $engineReady) {
-    Write-Host "  Starting BIOTrace AI Engine in background..." -ForegroundColor Yellow
-    $backendScript = Join-Path $rootDir "run_backend.bat"
-    Start-Process cmd.exe -ArgumentList "/c `"$backendScript`"" -WindowStyle Minimized
-
-    Write-Host "  Waiting for AI models to initialize (PyTorch, MediaPipe, OpenCV)..." -ForegroundColor DarkGray
-    $maxAttempts = 40
-    for ($i = 1; $i -le $maxAttempts; $i++) {
-        Start-Sleep -Seconds 2
-        try {
-            $resp = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 2 -ErrorAction SilentlyContinue
-            if ($resp.status -eq "healthy") {
-                $engineReady = $true
-                Write-Host "  [SUCCESS] AI Engine is ONLINE (v$($resp.version))!" -ForegroundColor Green
-                break
-            }
-        } catch {
-            Write-Host "  Waiting for server... ($($i * 2)s / $($maxAttempts * 2)s)" -ForegroundColor DarkGray
+$apiUrl = "http://127.0.0.1:$port"
+$backend = Start-Process -FilePath $python -WorkingDirectory $root -NoNewWindow -PassThru -ArgumentList @(
+    "-m", "uvicorn", "biotrace.main:create_app", "--factory", "--app-dir", "ai-engine/src",
+    "--host", "127.0.0.1", "--port", "$port"
+)
+$previousApiUrl = $env:BIOTRACE_API_URL
+try {
+    Write-Host "Waiting for BioTrace backend at $apiUrl"
+    $deadline = [System.Diagnostics.Stopwatch]::StartNew()
+    $ready = $false
+    while ($deadline.Elapsed.TotalSeconds -lt 90) {
+        if ($backend.HasExited) {
+            throw "BioTrace backend exited before it became ready (exit code $($backend.ExitCode))."
         }
+        try {
+            $health = Invoke-RestMethod -Uri "$apiUrl/api/v1/health" -TimeoutSec 2
+            $ready = $health.status -eq "healthy"
+        } catch {
+            # Uvicorn may still be importing the application.
+        }
+        if ($ready) { break }
+        Start-Sleep -Milliseconds 500
     }
-}
+    if (-not $ready) {
+        throw "Timed out waiting for the BioTrace backend."
+    }
 
-if (-not $engineReady) {
-    Write-Host "  [WARNING] Engine took longer than expected to report healthy." -ForegroundColor Yellow
-    Write-Host "  Launching Java Forensic Client anyway (will reconnect automatically)..." -ForegroundColor Yellow
+    $env:BIOTRACE_API_URL = $apiUrl
+    Push-Location (Join-Path $root "java-client")
+    try {
+        & $maven.Source -q compile exec:java
+        $clientExitCode = $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+} finally {
+    $env:BIOTRACE_API_URL = $previousApiUrl
+    if (-not $backend.HasExited) {
+        # The Windows virtual environment executable can spawn a child Python process.
+        & taskkill.exe /PID $backend.Id /T /F | Out-Null
+    }
+    $backend.Dispose()
 }
-
-Write-Host "  Launching BIOTrace Java Forensic Desktop Workstation..." -ForegroundColor Cyan
-$clientScript = Join-Path $rootDir "run_client.ps1"
-& powershell -ExecutionPolicy Bypass -File $clientScript
+exit $clientExitCode
