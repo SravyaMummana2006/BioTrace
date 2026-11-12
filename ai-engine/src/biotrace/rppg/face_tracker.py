@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 from pydantic import BaseModel
 
+from biotrace.vision.video_capture import open_video_capture
 from biotrace.core.logging import get_logger
 from biotrace.rppg.domain import TrackingMethod
 from biotrace.vision.mediapipe_compat import create_face_mesh
@@ -69,7 +70,7 @@ class LandmarkFaceTracker:
         cancel_event: Optional[Any] = None,
     ) -> FaceTrackingResult:
         """Processes video stream and extracts landmark ROIs per frame."""
-        cap = cv2.VideoCapture(video_path)
+        cap = open_video_capture(video_path)
         if not cap.isOpened():
             return FaceTrackingResult(
                 tracking_method=TrackingMethod.FAILED_TRACKING,

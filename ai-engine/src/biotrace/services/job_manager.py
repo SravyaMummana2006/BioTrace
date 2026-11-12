@@ -209,17 +209,16 @@ class JobManager:
             from biotrace.spatial_consistency.extractor import SpatialConsistencyExtractor
             from biotrace.visual_detection.inference import VisualDeepfakeDetector
 
-            rppg_extractor = self._custom_rppg_extractor or RPPGSignalExtractor()
-            facial_dynamics_extractor = (
-                self._custom_facial_dynamics_extractor or FacialDynamicsExtractor()
-            )
-            spatial_consistency_extractor = (
-                self._custom_spatial_consistency_extractor or SpatialConsistencyExtractor()
-            )
-            fusion_engine = (
-                self._custom_evidence_fusion_engine or MultimodalEvidenceFusionEngine()
-            )
-            visual_detector = self._custom_visual_detector or VisualDeepfakeDetector()
+            modalities = request.requested_modalities
+            if ForensicModality.RPPG in modalities:
+                rppg_extractor = self._custom_rppg_extractor or RPPGSignalExtractor()
+            if ForensicModality.FACIAL_DYNAMICS in modalities or ForensicModality.BLINK in modalities:
+                facial_dynamics_extractor = self._custom_facial_dynamics_extractor or FacialDynamicsExtractor()
+            if ForensicModality.SPATIAL_CONSISTENCY in modalities:
+                spatial_consistency_extractor = self._custom_spatial_consistency_extractor or SpatialConsistencyExtractor()
+            if ForensicModality.VISUAL_DETECTION in modalities:
+                visual_detector = self._custom_visual_detector or VisualDeepfakeDetector()
+            fusion_engine = self._custom_evidence_fusion_engine or MultimodalEvidenceFusionEngine()
             initialization_complete = True
 
             self._update_progress(

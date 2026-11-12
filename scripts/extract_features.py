@@ -14,6 +14,13 @@ import pandas as pd
 import torch
 import torchvision.models as models
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+AI_ENGINE_SRC = PROJECT_ROOT / "ai-engine" / "src"
+if str(AI_ENGINE_SRC) not in sys.path:
+    sys.path.insert(0, str(AI_ENGINE_SRC))
+
+from biotrace.vision.image_preprocessing import letterbox_bgr
+
 
 def extract_split(
     df_split: pd.DataFrame,
@@ -54,6 +61,7 @@ def extract_split(
                 img = cv2.imread(p)
                 if img is None:
                     raise FileNotFoundError(f"Frame file not found or corrupted: {p}")
+                img, _ = letterbox_bgr(img, target_size=(224, 224))
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 imgs.append(img)
 

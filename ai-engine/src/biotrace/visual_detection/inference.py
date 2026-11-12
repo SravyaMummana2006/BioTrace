@@ -299,6 +299,7 @@ class VisualDeepfakeDetector:
             "backbone": self.config.backbone,
             "weights_digest": self.weights_digest,
             "input_size": list(self.config.input_size),
+            "preprocessing": "letterbox",
             "sample_fps": self.config.sample_fps,
             "device": self.config.device,
             "inference_timestamp": datetime.utcnow().isoformat(),

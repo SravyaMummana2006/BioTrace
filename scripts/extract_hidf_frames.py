@@ -17,6 +17,13 @@ from typing import Dict, List, Optional, Tuple
 import cv2
 import pandas as pd
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+AI_ENGINE_SRC = PROJECT_ROOT / "ai-engine" / "src"
+if str(AI_ENGINE_SRC) not in sys.path:
+    sys.path.insert(0, str(AI_ENGINE_SRC))
+
+from biotrace.vision.image_preprocessing import letterbox_bgr
+
 
 def compute_sha256(filepath: Path) -> str:
     """Computes SHA-256 checksum of a file."""
@@ -141,13 +148,8 @@ def process_single_video(task: Tuple) -> Tuple[List[Dict], Optional[str]]:
             frame_filename = f"{video_id}_f{curr_frame:04d}.jpg"
             frame_path = split_dir / frame_filename
 
-            # Resample frame
-            if orig_w > target_size and orig_h > target_size:
-                interp = cv2.INTER_AREA
-            else:
-                interp = cv2.INTER_LINEAR
-
-            resized = cv2.resize(frame, (target_size, target_size), interpolation=interp)
+            # Resample frame while preserving geometry
+            resized, _ = letterbox_bgr(frame, target_size=(target_size, target_size))
             cv2.imwrite(str(frame_path), resized, [cv2.IMWRITE_JPEG_QUALITY, 95])
 
             frame_sha = compute_sha256(frame_path)

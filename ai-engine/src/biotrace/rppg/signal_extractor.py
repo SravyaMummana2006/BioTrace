@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import scipy.interpolate
 
+from biotrace.vision.video_capture import open_video_capture
 from biotrace.core.logging import get_logger
 from biotrace.rppg.domain import RegionSignalData
 from biotrace.rppg.face_tracker import FaceTrackingResult
@@ -69,7 +70,7 @@ def extract_raw_rgb_signals(
     cancel_event: Optional[Any] = None,
 ) -> Optional[ExtractedRawSignals]:
     """Extracts mean RGB per ROI across video frames and handles timestamps."""
-    cap = cv2.VideoCapture(video_path)
+    cap = open_video_capture(video_path)
     if not cap.isOpened():
         return None
 

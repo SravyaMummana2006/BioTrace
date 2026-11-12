@@ -236,14 +236,14 @@ The repository contains an exhaustive automated test suite covering unit, domain
 cd ai-engine
 python -m pytest tests -q
 ```
-*Verified on macOS Apple Silicon (Python 3.13, MediaPipe 1.2.3): **285 passed, 8 skipped, 10 failed**. The remaining failures require external research artifacts that are intentionally not committed: the HiDF dataset (`data/extracted/hidf`), derived fusion score caches, and the historical frozen-manifest digest expectations. The manifest, audit, and metric files themselves resolve from `reports/data/`.*
+*Verified on macOS Apple Silicon (Python 3.13, MediaPipe 1.2.3): **301 passed, 8 skipped, 7 failed**. The remaining failures require external research artifacts that are intentionally not committed: the HiDF extracted videos, derived fusion score caches, and Phase 8/9 feature inputs. The manifest, audit, and metric files themselves resolve from `reports/data/`.*
 
 ### Java Test Suite
 ```bash
 cd java-client
 mvn test
 ```
-*Verified on macOS: **61 tests, 57 passed, 9 skipped, 4 failed**. Three failures require HiDF fixture videos under `data/extracted/hidf/`; one is a font-family assertion (`Segoe UI`) that does not hold on macOS, where the JVM substitutes `Dialog`. The live workstation workflow passes separately against a running backend.*
+*Verified on macOS: **65 tests, 53 passed, 9 skipped, 3 failed**. The three failures require HiDF fixture videos under `data/extracted/hidf/` and `datasets/test_synthetic.mp4`. The live workstation workflow passes separately against a running backend.*
 
 ---
 

@@ -20,6 +20,8 @@ import cv2
 import numpy as np
 import torch
 
+from biotrace.vision.video_capture import open_video_capture
+from biotrace.vision.image_preprocessing import preprocess_letterboxed
 from biotrace.core.logging import get_logger
 from biotrace.domain.models import VideoMetadata
 from biotrace.visual_detection.domain import VisualDetectionConfig
@@ -56,7 +58,7 @@ class VideoFrameSampler:
         if not path.exists():
             return [], []
 
-        cap = cv2.VideoCapture(str(path))
+        cap = open_video_capture(str(path))
         if not cap.isOpened():
             return [], []
 
@@ -145,7 +147,7 @@ class VideoFrameSampler:
         max_idx = max(sample_indices)
         decoded: List[DecodedFrame] = []
 
-        cap = cv2.VideoCapture(str(path))
+        cap = open_video_capture(str(path))
         if not cap.isOpened():
             logger.error("Failed to open video container for '%s'", metadata.file_name)
             return []
@@ -245,16 +247,8 @@ class ImageNormalizer:
         if crop_bgr.size == 0 or len(crop_bgr.shape) != 3:
             raise ValueError(f"Invalid crop shape for normalization: {crop_bgr.shape}")
 
-        # 1. Resize to target dimensions
-        resized = cv2.resize(crop_bgr, target_size, interpolation=cv2.INTER_AREA)
-
-        # 2. Convert BGR to RGB
-        rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
-
-        # 3. Channel-wise standard normalization
-        for c in range(3):
-            rgb[:, :, c] = (rgb[:, :, c] - mean[c]) / std[c]
-
-        # 4. Transpose (H, W, C) -> (C, H, W)
-        chw = np.transpose(rgb, (2, 0, 1)).astype(np.float32)
+        # Preserve aspect ratio with center padding instead of stretching.
+        chw, _ = preprocess_letterboxed(
+            crop_bgr, target_size=target_size, mean=mean, std=std
+        )
         return chw

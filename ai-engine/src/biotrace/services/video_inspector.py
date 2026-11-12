@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import cv2
 
+from biotrace.vision.video_capture import open_video_capture
 from biotrace.core.config import Settings
 from biotrace.core.exceptions import VideoFormatError, VideoProcessingError
 from biotrace.core.logging import get_logger
@@ -93,7 +94,7 @@ class VideoInspector:
             )
 
         # 3. OpenCV Container Decoding Test
-        cap = cv2.VideoCapture(str(path))
+        cap = open_video_capture(str(path))
         if not cap.isOpened():
             raise VideoProcessingError(
                 f"OpenCV failed to open video container: {path.name}",

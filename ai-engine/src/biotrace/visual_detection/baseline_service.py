@@ -18,11 +18,12 @@ Scientific Principles & Forensic Guardrails (Phase 7):
        Loads checkpoints with weights_only=True and verifies SHA-256 integrity.
 """
 
+from contextlib import closing
 from datetime import datetime
 import hashlib
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Generator, List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -31,7 +32,9 @@ import torch.nn as nn
 from pydantic import BaseModel, Field
 import torchvision.models as models
 
+from biotrace.vision.video_capture import open_video_capture
 from biotrace.core.logging import get_logger
+from biotrace.vision.image_preprocessing import preprocess_letterboxed
 
 logger = get_logger(__name__)
 
@@ -53,6 +56,10 @@ class FrameScoreDetail(BaseModel):
 class BaselineInferenceResult(BaseModel):
     """Structured response for the experimental visual baseline inference."""
     video_path: str
+    non_square_input: bool = False
+    status: str = Field(default="COMPLETED", description="'COMPLETED', 'FAILED', or 'UNAVAILABLE'.")
+    error_message: Optional[str] = Field(default=None, description="Concrete failure reason when status is not COMPLETED.")
+    preprocessing: str = Field(default="letterbox_224", description="Input preprocessing contract used for inference.")
     prediction: str = Field(description="'REAL' or 'FAKE' prediction based on validation operating threshold.")
     predicted_class: str = Field(description="Alias for prediction ('REAL' or 'FAKE').")
     real_score: float = Field(description="Score indicating likelihood of authentic media [0.0, 1.0].")
@@ -78,6 +85,26 @@ class BaselineInferenceResult(BaseModel):
     )
     frame_scores: List[FrameScoreDetail] = Field(default_factory=list)
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
+    @classmethod
+    def unavailable(cls, video_path: str, error: str, status: str = "FAILED") -> "BaselineInferenceResult":
+        """Builds a non-scoring result for unreadable media or an unavailable model."""
+        return cls(
+            video_path=video_path,
+            prediction="UNAVAILABLE",
+            predicted_class="UNAVAILABLE",
+            real_score=0.0,
+            fake_score=0.0,
+            raw_sigmoid_score=0.0,
+            mean_logit_score=0.0,
+            aggregated_video_score=0.0,
+            sampled_frames_count=0,
+            number_of_frames_evaluated=0,
+            checkpoint_sha256=EXPECTED_BASELINE_SHA256,
+            inter_frame_variance=0.0,
+            status=status,
+            error_message=error,
+        )
 
 
 class BaselineInferenceService:
@@ -160,54 +187,53 @@ class BaselineInferenceService:
 
     @staticmethod
     def preprocess_frame(bgr_image: np.ndarray) -> torch.Tensor:
-        """Standard 224x224 RGB ImageNet normalization matching Phase 5 & 6."""
+        """Letterbox to 224x224, then apply ImageNet normalization.
+
+        Letterboxing preserves portrait/landscape geometry with symmetric
+        padding, matching the training feature extraction path.
+        """
         if bgr_image is None or bgr_image.size == 0:
             raise ValueError("Empty or invalid image frame encountered.")
 
-        resized = cv2.resize(bgr_image, (224, 224), interpolation=cv2.INTER_AREA)
-        rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-
-        mean = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(1, 1, 3)
-        std = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape(1, 1, 3)
-
-        normalized = ((rgb / 255.0) - mean) / std
-        tensor = torch.from_numpy(normalized.transpose(2, 0, 1)).float()
-        return tensor
+        chw, _ = preprocess_letterboxed(bgr_image, target_size=(224, 224))
+        return torch.from_numpy(chw).float()
 
     def sample_video_frames(
         self, video_path: str, num_frames: int = 10
     ) -> List[Tuple[int, float, np.ndarray]]:
         """Samples exactly num_frames uniformly across video duration."""
+        return list(self._iter_sampled_frames(video_path, num_frames))
+
+    def _iter_sampled_frames(
+        self, video_path: str, num_frames: int
+    ) -> Generator[Tuple[int, float, np.ndarray], None, None]:
         p = Path(video_path)
         if not p.exists():
             raise FileNotFoundError(f"Video file does not exist: {video_path}")
 
-        cap = cv2.VideoCapture(str(p))
-        if not cap.isOpened():
-            raise ValueError(f"Unable to open video stream: {video_path}")
+        cap = open_video_capture(str(p))
+        try:
+            if not cap.isOpened():
+                raise ValueError(f"Unable to open video stream: {video_path}")
 
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+            if total_frames <= 0:
+                raise ValueError(f"Video contains zero readable frames: {video_path}")
 
-        if total_frames <= 0:
+            indices = np.linspace(0, total_frames - 1, num_frames, dtype=int)
+            decoded = False
+            for idx in indices:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
+                ret, frame = cap.read()
+                if ret and frame is not None:
+                    decoded = True
+                    yield int(idx), float(idx) / float(fps), frame
+
+            if not decoded:
+                raise ValueError(f"Failed to decode any frames from video: {video_path}")
+        finally:
             cap.release()
-            raise ValueError(f"Video contains zero readable frames: {video_path}")
-
-        indices = np.linspace(0, max(0, total_frames - 1), num_frames, dtype=int)
-        sampled = []
-
-        for idx in indices:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
-            ret, frame = cap.read()
-            if ret and frame is not None:
-                ts = float(idx) / float(fps)
-                sampled.append((int(idx), ts, frame))
-
-        cap.release()
-        if not sampled:
-            raise ValueError(f"Failed to decode any frames from video: {video_path}")
-
-        return sampled
 
     def predict_video(
         self,
@@ -227,14 +253,15 @@ class BaselineInferenceService:
             )
             threshold = STANDARD_THRESHOLD
 
-        sampled = self.sample_video_frames(video_path, num_frames=num_frames)
-
         tensors = []
         frame_meta = []
-        for f_idx, ts, bgr in sampled:
-            t = self.preprocess_frame(bgr)
-            tensors.append(t)
-            frame_meta.append((f_idx, ts))
+        non_square_input = False
+        with closing(self._iter_sampled_frames(video_path, num_frames)) as sampled:
+            for frame_index, timestamp, frame in sampled:
+                non_square_input |= frame.shape[0] != frame.shape[1]
+                tensors.append(self.preprocess_frame(frame))
+                frame_meta.append((frame_index, timestamp))
+                del frame
 
         batch = torch.stack(tensors).to(self.device)
 
@@ -271,6 +298,7 @@ class BaselineInferenceService:
 
         return BaselineInferenceResult(
             video_path=str(video_path),
+            non_square_input=non_square_input,
             prediction=prediction,
             predicted_class=prediction,
             real_score=round(real_score, 4),
@@ -285,5 +313,7 @@ class BaselineInferenceService:
             operating_threshold=round(threshold, 4),
             checkpoint_sha256=self.weights_sha256 or EXPECTED_BASELINE_SHA256,
             inter_frame_variance=round(variance, 4),
+            status="COMPLETED",
+            preprocessing="letterbox_224",
             frame_scores=frame_scores,
         )

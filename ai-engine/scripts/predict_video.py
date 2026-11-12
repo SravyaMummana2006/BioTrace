@@ -25,6 +25,12 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 
+AI_ENGINE_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(AI_ENGINE_SRC) not in sys.path:
+    sys.path.insert(0, str(AI_ENGINE_SRC))
+
+from biotrace.vision.image_preprocessing import preprocess_letterboxed
+
 
 def compute_sha256(file_path: str) -> str:
     """Computes SHA-256 cryptographic digest of a file for provenance verification."""
@@ -58,18 +64,12 @@ def load_model(checkpoint_path: Path, device: torch.device) -> Tuple[nn.Module, 
 
 
 def preprocess_image(bgr_image: np.ndarray, target_size: Tuple[int, int] = (224, 224)) -> torch.Tensor:
-    """Resizes and normalizes an image using standard ImageNet mean and standard deviation."""
+    """Letterboxes and normalizes an image using standard ImageNet statistics."""
     if bgr_image is None or bgr_image.size == 0:
         raise ValueError("Invalid or empty image array.")
 
-    resized = cv2.resize(bgr_image, target_size, interpolation=cv2.INTER_AREA)
-    rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-
-    mean = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(1, 1, 3)
-    std = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape(1, 1, 3)
-
-    norm = ((rgb / 255.0) - mean) / std
-    tensor = torch.from_numpy(norm.transpose(2, 0, 1)).float()
+    chw, _ = preprocess_letterboxed(bgr_image, target_size=target_size)
+    tensor = torch.from_numpy(chw).float()
     return tensor
 
 

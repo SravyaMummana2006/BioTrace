@@ -27,10 +27,18 @@ try {
 }
 
 $apiUrl = "http://127.0.0.1:$port"
-$backend = Start-Process -FilePath $python -WorkingDirectory $root -NoNewWindow -PassThru -ArgumentList @(
-    "-m", "uvicorn", "biotrace.main:create_app", "--factory", "--app-dir", "ai-engine/src",
-    "--host", "127.0.0.1", "--port", "$port"
-)
+$previousWorkerThreads = $env:BIOTRACE_WORKER_THREADS
+try {
+    if (-not $previousWorkerThreads) {
+        $env:BIOTRACE_WORKER_THREADS = "1"
+    }
+    $backend = Start-Process -FilePath $python -WorkingDirectory $root -NoNewWindow -PassThru -ArgumentList @(
+        "-m", "uvicorn", "biotrace.main:create_app", "--factory", "--app-dir", "ai-engine/src",
+        "--host", "127.0.0.1", "--port", "$port"
+    )
+} finally {
+    $env:BIOTRACE_WORKER_THREADS = $previousWorkerThreads
+}
 $previousApiUrl = $env:BIOTRACE_API_URL
 try {
     Write-Host "Waiting for BioTrace backend at $apiUrl"

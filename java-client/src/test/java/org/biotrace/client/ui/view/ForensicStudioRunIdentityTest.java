@@ -59,7 +59,7 @@ class ForensicStudioRunIdentityTest {
         flushEdt();
         assertFalse(view.getVerdictBannerLabel().getText().contains("MULTIMODAL"),
                 "stale multimodal response updated the verdict banner");
-        assertNotEquals("MULTIMODAL: MANIPULATED / SYNTHETIC ARTIFACTS CONFIRMED (91.0%)",
+        assertNotEquals("MULTIMODAL: LIKELY FAKE",
                 view.getVerdictBannerLabel().getText());
 
         // Response belonging to the active run is allowed.
@@ -168,7 +168,7 @@ class ForensicStudioRunIdentityTest {
 
         String banner = view.getVerdictBannerLabel().getText();
         assertTrue(banner.contains("MULTIMODAL"), "retained multimodal result was not applied: " + banner);
-        assertTrue(banner.contains("MANIPULATED"), "retained verdict was not displayed: " + banner);
+        assertTrue(banner.contains("LIKELY FAKE"), "retained verdict was not displayed: " + banner);
         assertTrue(view.getStageLabel().getText().contains("retained analysis result displayed"),
                 "rejection outcome was not visible after applying the retained result: "
                         + view.getStageLabel().getText());
@@ -286,11 +286,67 @@ class ForensicStudioRunIdentityTest {
 
         assertEquals("UNAVAILABLE", view.getPhysModelBadge().getText());
         assertEquals("UNAVAILABLE", view.getFusionModelBadge().getText());
-        assertTrue(view.getVerdictBannerLabel().getText().contains("UNAVAILABLE"));
+        assertTrue(view.getVerdictBannerLabel().getText().contains("UNASSESSED"));
         assertTrue(view.getVerdictArea().getText().contains("—"),
                 "unavailable score fields should be rendered as placeholders");
         assertFalse(view.getVerdictArea().getText().contains("Synthetic Likelihood (Fake Score): 0.0000"),
                 "a fabricated zero score was rendered for an unavailable model");
+    }
+
+    @Test
+    void flagsVisualFakeWhenFusionIsUnavailableOrDisagrees() throws Exception {
+        ForensicStudioView view = createView(new FakeOrchestrator());
+        String withoutFusion = """
+                {"visual_model":{"prediction":"FAKE","fake_score":0.91}}
+                """;
+        runOnEdt(() -> view.applyMultimodalReport(withoutFusion, "clip.mp4"));
+        assertTrue(view.getVerdictBannerLabel().getText().contains("VISUAL: LIKELY FAKE"));
+
+        String disagreement = """
+                {"visual_model":{"prediction":"FAKE","fake_score":0.91},
+                 "multimodal_fusion":{"status":"COMPLETED","prediction":"REAL","fusion_score":0.42}}
+                """;
+        runOnEdt(() -> view.applyMultimodalReport(disagreement, "clip.mp4"));
+        assertTrue(view.getVerdictBannerLabel().getText().contains("MODELS DISAGREE"));
+    }
+
+    @Test
+    void portraitScoresAreNotGatedByAspectRatio() throws Exception {
+        ForensicStudioView view = createView(new FakeOrchestrator());
+        String report = """
+                {"overall_verdict":"REAL","verdict_basis":"fusion",
+                 "verdict_reason":"Fusion model completed.",
+                 "visual_model":{"prediction":"REAL","fake_score":0.088,"non_square_input":true},
+                 "multimodal_fusion":{"status":"COMPLETED","prediction":"REAL","fusion_score":0.006}}
+                """;
+        runOnEdt(() -> view.applyMultimodalReport(report, "portrait.mp4"));
+        String banner = view.getVerdictBannerLabel().getText();
+        assertTrue(banner.contains("LIKELY AUTHENTIC"), "aspect ratio must not gate the verdict: " + banner);
+        assertFalse(banner.contains("UNASSESSED"));
+    }
+
+    @Test
+    void apiVerdictReasonRendersForUnassessedAndInconclusive() throws Exception {
+        ForensicStudioView view = createView(new FakeOrchestrator());
+
+        String unassessed = """
+                {"overall_verdict":"UNASSESSED","verdict_basis":"unassessed",
+                 "verdict_reason":"Visual analysis failed: video frames could not be decoded.",
+                 "visual_model":{"prediction":"UNAVAILABLE","status":"FAILED","error_message":"video frames could not be decoded"}}
+                """;
+        runOnEdt(() -> view.applyMultimodalReport(unassessed, "broken.mp4"));
+        assertTrue(view.getVerdictBannerLabel().getText().contains("UNASSESSED"));
+        assertTrue(view.getVerdictArea().getText().contains("UNASSESSED"));
+
+        String inconclusive = """
+                {"overall_verdict":"INCONCLUSIVE","verdict_basis":"inconclusive",
+                 "verdict_reason":"Visual and physiological evidence conflict and fusion is unavailable.",
+                 "visual_model":{"prediction":"FAKE","fake_score":0.91},
+                 "physiological_model":{"status":"COMPLETED","prediction":"REAL","fake_score":0.2}}
+                """;
+        runOnEdt(() -> view.applyMultimodalReport(inconclusive, "conflict.mp4"));
+        assertTrue(view.getVerdictBannerLabel().getText().contains("INCONCLUSIVE"));
+        assertTrue(view.getVerdictBannerLabel().getText().contains("MODELS DISAGREE"));
     }
 
     private ForensicStudioView createView(JobOrchestrator orchestrator) throws Exception {

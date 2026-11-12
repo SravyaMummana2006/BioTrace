@@ -26,6 +26,7 @@ import joblib
 import numpy as np
 from pydantic import BaseModel, Field
 
+from biotrace.vision.video_capture import open_video_capture
 from biotrace.core.logging import get_logger
 from biotrace.vision.mediapipe_compat import create_face_mesh
 from biotrace.domain.enums import ForensicModality, SignalType
@@ -113,8 +114,77 @@ class MultimodalAnalysisReport(BaseModel):
     evidence_synthesis: List[ForensicEvidenceItem] = Field(default_factory=list)
     waveform_telemetry: Optional[ForensicSignal] = None
     telemetry_state: str = Field(description="'SIGNAL_ACQUIRED', 'INSUFFICIENT_QUALITY', 'SIGNAL_UNAVAILABLE', or 'PROCESSING_FAILED'")
+    verdict_basis: str = Field(default="fusion", description="'fusion', 'visual_only', 'visual_phys_agreement', 'inconclusive', or 'unassessed'.")
+    verdict_reason: str = Field(default="", description="Concrete reason for the overall verdict, especially when unassessed or inconclusive.")
     execution_time_seconds: float = 0.0
     provenance: Dict[str, str] = Field(default_factory=dict)
+
+
+def derive_overall_assessment(
+    visual_result: BaselineInferenceResult,
+    phys_result: "PhysiologicalAnalysisResult",
+    fusion_result: "MultimodalFusionResult",
+) -> Tuple[str, float, str, str]:
+    """Derives the headline verdict from available, validated model outputs.
+
+    Aspect ratio is never used as a verdict gate. An UNASSESSED result is
+    returned only when a concrete model or media failure leaves insufficient
+    evidence.
+    """
+    visual_ok = (
+        visual_result.status == "COMPLETED"
+        and visual_result.prediction in ("REAL", "FAKE")
+        and visual_result.fake_score is not None
+    )
+    phys_ok = (
+        phys_result.status == "COMPLETED"
+        and phys_result.prediction in ("REAL", "FAKE")
+        and phys_result.fake_score is not None
+    )
+    fusion_ok = (
+        fusion_result.status == "COMPLETED"
+        and fusion_result.prediction in ("REAL", "FAKE")
+        and fusion_result.fusion_score is not None
+    )
+
+    if fusion_ok:
+        confidence = min(
+            1.0,
+            abs(fusion_result.fusion_score - fusion_result.operating_threshold) * 2.0,
+        )
+        reason = "Fusion model completed."
+        if visual_ok and phys_ok and visual_result.prediction != phys_result.prediction:
+            reason = "Fusion resolved conflicting visual and physiological signals."
+        return fusion_result.prediction, confidence, "fusion", reason
+
+    if not visual_ok:
+        reason = visual_result.error_message or (
+            "Visual analysis unavailable or no frames could be decoded."
+        )
+        return "UNASSESSED", 0.0, "unassessed", reason
+
+    if phys_ok:
+        if visual_result.prediction == phys_result.prediction:
+            return (
+                visual_result.prediction,
+                0.5,
+                "visual_phys_agreement",
+                "Fusion unavailable; visual and physiological evidence agree.",
+            )
+        return (
+            "INCONCLUSIVE",
+            0.0,
+            "inconclusive",
+            "Visual and physiological evidence conflict and fusion is unavailable.",
+        )
+
+    confidence = min(1.0, abs(visual_result.fake_score - 0.5) * 2.0)
+    return (
+        visual_result.prediction,
+        confidence,
+        "visual_only",
+        "Physiological and fusion evidence unavailable; visual-only result.",
+    )
 
 
 def calc_ear(pts: np.ndarray) -> float:
@@ -143,7 +213,15 @@ class MultimodalForensicService:
     _instance: Optional["MultimodalForensicService"] = None
 
     def __init__(self):
-        self.visual_service = BaselineInferenceService.get_instance()
+        try:
+            self.visual_service = BaselineInferenceService.get_instance()
+            self.visual_loaded = True
+            self.visual_load_error: Optional[str] = None
+        except Exception as exc:
+            logger.error("Visual baseline model unavailable: %s", exc)
+            self.visual_service = None
+            self.visual_loaded = False
+            self.visual_load_error = str(exc)
         self._load_phase9_models()
         self._load_phase10_fusion_model()
 
@@ -206,7 +284,7 @@ class MultimodalForensicService:
                 error_message="Model weights unavailable",
             )
 
-        cap = cv2.VideoCapture(video_path)
+        cap = open_video_capture(video_path)
         if not cap.isOpened():
             return PhysiologicalAnalysisResult(
                 status="FAILED",
@@ -379,6 +457,18 @@ class MultimodalForensicService:
                 error_message="Phase 10 model checkpoint not loaded",
             )
 
+        if visual_result.status != "COMPLETED" or visual_result.prediction not in ("REAL", "FAKE"):
+            return MultimodalFusionResult(
+                status="UNAVAILABLE",
+                prediction="UNAVAILABLE",
+                uncertainty_level="UNASSESSED",
+                limitations=[
+                    "Multimodal fusion is unavailable because visual analysis failed or returned no score.",
+                    "No fusion score is fabricated.",
+                ],
+                error_message=visual_result.error_message or "Visual modality unavailable",
+            )
+
         if phys_result.status != "COMPLETED":
             return MultimodalFusionResult(
                 status="UNAVAILABLE",
@@ -421,7 +511,24 @@ class MultimodalForensicService:
         jid = job_id or f"job-{hashlib.sha256(video_path.encode()).hexdigest()[:12]}"
 
         # 1. Visual Model (Phase 6)
-        visual_res = self.visual_service.predict_video(video_path, num_frames=10, threshold=0.50)
+        if self.visual_service is None:
+            visual_res = BaselineInferenceResult.unavailable(
+                video_path,
+                self.visual_load_error or "Visual baseline model unavailable.",
+                status="UNAVAILABLE",
+            )
+        else:
+            try:
+                visual_res = self.visual_service.predict_video(
+                    video_path, num_frames=10, threshold=0.50
+                )
+            except Exception as exc:
+                logger.error(
+                    "Visual analysis failed for '%s': %s", video_path, exc, exc_info=True
+                )
+                visual_res = BaselineInferenceResult.unavailable(
+                    video_path, f"Visual analysis failed: {exc}"
+                )
 
         # 2. Physiological Model (Phase 9)
         phys_res = self.analyze_physiological_signals(video_path)
@@ -455,14 +562,24 @@ class MultimodalForensicService:
         evidence_items = []
 
         # Visual evidence item
-        evidence_items.append(ForensicEvidenceItem(
-            category="Spatial Visual Artifacts",
-            observation=f"Sampled 10 frames (224x224 RGB). Video mean logit: {visual_res.mean_logit_score:.4f}, Fake score: {visual_res.fake_score:.4f}.",
-            responsible_model="EfficientNet-B0 Visual Baseline (Phase 6)",
-            confidence_or_quality=f"Variance: {visual_res.inter_frame_variance:.4f}",
-            interpretation="Synthetic spatial artifact patterns detected" if visual_res.prediction == "FAKE" else "Authentic visual facial textures observed",
-            limitations="Uncalibrated heuristic score; sensitive to video compression and resolution.",
-        ))
+        if visual_res.status == "COMPLETED":
+            evidence_items.append(ForensicEvidenceItem(
+                category="Spatial Visual Artifacts",
+                observation=f"Sampled 10 frames (224x224 letterboxed RGB). Video mean logit: {visual_res.mean_logit_score:.4f}, Fake score: {visual_res.fake_score:.4f}.",
+                responsible_model="EfficientNet-B0 Visual Baseline (Phase 6)",
+                confidence_or_quality=f"Variance: {visual_res.inter_frame_variance:.4f}",
+                interpretation="Synthetic spatial artifact patterns detected" if visual_res.prediction == "FAKE" else "Authentic visual facial textures observed",
+                limitations="Uncalibrated heuristic score; sensitive to video compression and resolution.",
+            ))
+        else:
+            evidence_items.append(ForensicEvidenceItem(
+                category="Spatial Visual Artifacts",
+                observation=f"Visual analysis unavailable: {visual_res.error_message or visual_res.status}",
+                responsible_model="EfficientNet-B0 Visual Baseline (Phase 6)",
+                confidence_or_quality="N/A",
+                interpretation="No visual authenticity score was produced.",
+                limitations="No score is fabricated when frames cannot be decoded or the model is unavailable.",
+            ))
 
         # Kinematic evidence item
         if phys_res.status == "COMPLETED":
@@ -499,13 +616,10 @@ class MultimodalForensicService:
                 limitations="Standardized logistic score; operates under Protocol C component isolation bounds.",
             ))
 
-        # Overall verdict
-        if fusion_res.status == "COMPLETED":
-            overall_verdict = fusion_res.prediction
-            overall_conf = abs(fusion_res.fusion_score - fusion_res.operating_threshold) * 2.0
-        else:
-            overall_verdict = visual_res.prediction
-            overall_conf = abs(visual_res.fake_score - 0.50) * 2.0
+        # Overall verdict from validated outputs; aspect ratio is never a gate.
+        overall_verdict, overall_conf, verdict_basis, verdict_reason = derive_overall_assessment(
+            visual_res, phys_res, fusion_res
+        )
 
         elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
 
@@ -520,10 +634,14 @@ class MultimodalForensicService:
             evidence_synthesis=evidence_items,
             waveform_telemetry=waveform_sig,
             telemetry_state=telemetry_state,
+            verdict_basis=verdict_basis,
+            verdict_reason=verdict_reason,
             execution_time_seconds=round(elapsed, 3),
             provenance={
                 "frozen_manifest_sha256": FROZEN_MANIFEST_SHA256,
                 "p6_checkpoint_sha256": visual_res.checkpoint_sha256,
                 "fusion_threshold": str(fusion_res.operating_threshold),
+                "visual_status": visual_res.status,
+                "visual_preprocessing": visual_res.preprocessing,
             },
         )

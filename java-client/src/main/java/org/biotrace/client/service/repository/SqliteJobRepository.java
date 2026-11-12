@@ -86,9 +86,8 @@ public class SqliteJobRepository implements AnalysisJobRepository {
     @Override
     public synchronized AnalysisJob save(AnalysisJob job) {
         Objects.requireNonNull(job, "Job cannot be null");
-        memoryFallback.put(job.getId(), job);
-
         if (!jdbcDriverAvailable) {
+            memoryFallback.put(job.getId(), job);
             return job;
         }
 

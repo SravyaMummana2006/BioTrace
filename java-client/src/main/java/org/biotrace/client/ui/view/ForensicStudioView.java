@@ -84,6 +84,7 @@ public class ForensicStudioView extends JPanel {
         private boolean cancellationRequested;
         private boolean cancellationConfirmed;
         private String retainedMultimodalJson;
+        private boolean multimodalRendered;
 
         private AnalysisRun(long id, String videoPath) {
             this.id = id;
@@ -907,9 +908,13 @@ public class ForensicStudioView extends JPanel {
                             ? String.format(java.util.Locale.ROOT, "%.3f", r.overallAuthenticityScore())
                             : "N/A (Physiological Only)";
                     
-                    updateMetricBadge(scoreMetricLabel, "Authenticity Score", scoreText);
                     updateMetricBadge(durationMetricLabel, "Pipeline Duration", String.format(java.util.Locale.ROOT, "%.2fs", r.executionTimeSeconds()));
                     updateMetricBadge(jobIdMetricLabel, "Job UUID", r.jobId().substring(0, Math.min(8, r.jobId().length())) + "...");
+
+                    if (run != null && run.multimodalRendered) {
+                        return;
+                    }
+                    updateMetricBadge(scoreMetricLabel, "Authenticity Score", scoreText);
 
                     if (!r.isAuthenticityAssessed()) {
                         verdictBannerLabel.setText("PHYSIOLOGICAL EVIDENCE RECORDED (AUTHENTICITY UNASSESSED)");
@@ -966,6 +971,9 @@ public class ForensicStudioView extends JPanel {
                         }
                     }
                 } else if (job.getStatus() == JobStatus.FAILED) {
+                    if (run != null && run.multimodalRendered) {
+                        return;
+                    }
                     verdictBannerLabel.setText("EXECUTION FAILED");
                     verdictBannerPanel.setBackground(ForensicTheme.ALERT_BG);
                     verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.ALERT_BORDER, 1));
@@ -1005,9 +1013,14 @@ public class ForensicStudioView extends JPanel {
 
     public void applyMultimodalReport(String json, String pathStr) {
         multimodalNotice.setVisible(false);
-        String overallVerdict = org.biotrace.client.service.api.JsonHelper.getString(json, "overall_verdict").orElse("UNASSESSED");
+        if (activeRun != null && activeRun.videoPath.equals(pathStr)) {
+            activeRun.multimodalRendered = true;
+        }
         double overallConf = org.biotrace.client.service.api.JsonHelper.getDouble(json, "overall_confidence").orElse(0.0);
         String telemetryState = org.biotrace.client.service.api.JsonHelper.getString(json, "telemetry_state").orElse("SIGNAL_UNAVAILABLE");
+        String overallVerdict = org.biotrace.client.service.api.JsonHelper.getString(json, "overall_verdict").orElse("");
+        String verdictBasis = org.biotrace.client.service.api.JsonHelper.getString(json, "verdict_basis").orElse("");
+        String verdictReason = org.biotrace.client.service.api.JsonHelper.getString(json, "verdict_reason").orElse("");
 
         // Visual model
         java.util.Optional<String> vBlock = org.biotrace.client.service.api.JsonHelper.getObject(json, "visual_model");
@@ -1064,34 +1077,80 @@ public class ForensicStudioView extends JPanel {
                 visualAvailable
                         ? String.format(java.util.Locale.ROOT, "%s (%.2f)", vPred, vFakeOpt.get())
                         : "Unavailable");
-        updateMetricBadge(scoreMetricLabel, "Authenticity Score",
+        updateMetricBadge(scoreMetricLabel, "Fusion Fake Score",
                 fusionAvailable
-                        ? String.format(java.util.Locale.ROOT, "%s (%.2f)", fPred, fScoreOpt.get())
+                        ? String.format(java.util.Locale.ROOT, "%.3f (raw)", fScoreOpt.get())
                         : "Unavailable");
 
-        // Update headline verdict banner only for a completed fusion result.
-        if (!fusionAvailable) {
-            verdictBannerLabel.setText(visualAvailable
-                    ? "MULTIMODAL FUSION UNAVAILABLE — VISUAL EVIDENCE ONLY"
-                    : "MULTIMODAL RESULTS UNAVAILABLE — NO SCORES REPORTED");
-            verdictBannerPanel.setBackground(ForensicTheme.WARNING_BG);
-            verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.WARNING_BORDER, 1));
-            verdictBannerLabel.setForeground(ForensicTheme.WARNING_AMBER);
-        } else if ("FAKE".equalsIgnoreCase(overallVerdict)) {
-            verdictBannerLabel.setText(String.format(java.util.Locale.ROOT, "MULTIMODAL: MANIPULATED / SYNTHETIC ARTIFACTS CONFIRMED (%.1f%%)", fScoreOpt.get() * 100));
-            verdictBannerPanel.setBackground(ForensicTheme.ALERT_BG);
-            verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.ALERT_BORDER, 1));
-            verdictBannerLabel.setForeground(ForensicTheme.ALERT_RED);
-        } else if ("REAL".equalsIgnoreCase(overallVerdict)) {
-            verdictBannerLabel.setText(String.format(java.util.Locale.ROOT, "MULTIMODAL: AUTHENTIC / BIOLOGICALLY CONSISTENT (%.1f%%)", (1.0 - fScoreOpt.get()) * 100));
-            verdictBannerPanel.setBackground(ForensicTheme.SUCCESS_BG);
-            verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.SUCCESS_BORDER, 1));
-            verdictBannerLabel.setForeground(ForensicTheme.SUCCESS_GREEN);
+        boolean visualFake = visualAvailable && "FAKE".equalsIgnoreCase(vPred);
+        boolean physiologicalFake = physAvailable && "FAKE".equalsIgnoreCase(pPred);
+        boolean fusionFake = fusionAvailable && "FAKE".equalsIgnoreCase(fPred);
+        boolean apiFake = "FAKE".equalsIgnoreCase(overallVerdict);
+        boolean apiReal = "REAL".equalsIgnoreCase(overallVerdict);
+        boolean apiInconclusive = "INCONCLUSIVE".equalsIgnoreCase(overallVerdict);
+        boolean apiUnassessed = "UNASSESSED".equalsIgnoreCase(overallVerdict);
+
+        String determinationDisplay;
+        String noticeText = verdictReason;
+        Color background;
+        Color border;
+        Color foreground;
+        if (apiFake || apiReal) {
+            String prefix = "visual_only".equalsIgnoreCase(verdictBasis) ? "VISUAL: " : "MULTIMODAL: ";
+            determinationDisplay = prefix + (apiFake ? "LIKELY FAKE" : "LIKELY AUTHENTIC");
+            if (apiFake) {
+                background = ForensicTheme.ALERT_BG;
+                border = ForensicTheme.ALERT_BORDER;
+                foreground = ForensicTheme.ALERT_RED;
+            } else {
+                background = ForensicTheme.SUCCESS_BG;
+                border = ForensicTheme.SUCCESS_BORDER;
+                foreground = ForensicTheme.SUCCESS_GREEN;
+            }
+        } else if (apiInconclusive) {
+            determinationDisplay = "INCONCLUSIVE — MODELS DISAGREE";
+            background = ForensicTheme.WARNING_BG;
+            border = ForensicTheme.WARNING_BORDER;
+            foreground = ForensicTheme.WARNING_AMBER;
+        } else if (apiUnassessed) {
+            determinationDisplay = "AUTHENTICITY UNASSESSED";
+            background = ForensicTheme.WARNING_BG;
+            border = ForensicTheme.WARNING_BORDER;
+            foreground = ForensicTheme.WARNING_AMBER;
+            if (noticeText.isBlank()) {
+                noticeText = "Insufficient evidence for an authenticity assessment.";
+            }
+        } else if (fusionFake || (!fusionAvailable && visualFake)) {
+            determinationDisplay = fusionFake ? "MULTIMODAL: LIKELY FAKE" : "VISUAL: LIKELY FAKE";
+            background = ForensicTheme.ALERT_BG;
+            border = ForensicTheme.ALERT_BORDER;
+            foreground = ForensicTheme.ALERT_RED;
+        } else if (visualFake || physiologicalFake) {
+            determinationDisplay = "INCONCLUSIVE — MODELS DISAGREE";
+            background = ForensicTheme.WARNING_BG;
+            border = ForensicTheme.WARNING_BORDER;
+            foreground = ForensicTheme.WARNING_AMBER;
+        } else if (fusionAvailable) {
+            determinationDisplay = "MULTIMODAL: LIKELY AUTHENTIC";
+            background = ForensicTheme.SUCCESS_BG;
+            border = ForensicTheme.SUCCESS_BORDER;
+            foreground = ForensicTheme.SUCCESS_GREEN;
         } else {
-            verdictBannerLabel.setText("MULTIMODAL VERDICT UNASSESSED — NO SCORE REPORTED");
-            verdictBannerPanel.setBackground(ForensicTheme.WARNING_BG);
-            verdictBannerPanel.setBorder(BorderFactory.createLineBorder(ForensicTheme.WARNING_BORDER, 1));
-            verdictBannerLabel.setForeground(ForensicTheme.WARNING_AMBER);
+            determinationDisplay = visualAvailable
+                    ? "VISUAL: LIKELY AUTHENTIC (FUSION UNAVAILABLE)"
+                    : "MULTIMODAL RESULTS UNAVAILABLE";
+            background = ForensicTheme.WARNING_BG;
+            border = ForensicTheme.WARNING_BORDER;
+            foreground = ForensicTheme.WARNING_AMBER;
+        }
+        verdictBannerLabel.setText(determinationDisplay);
+        verdictBannerPanel.setBackground(background);
+        verdictBannerPanel.setBorder(BorderFactory.createLineBorder(border, 1));
+        verdictBannerLabel.setForeground(foreground);
+        if (!noticeText.isBlank()) {
+            multimodalNotice.setText(noticeText);
+            multimodalNotice.setForeground(foreground);
+            multimodalNotice.setVisible(true);
         }
 
         // Update waveform telemetry
@@ -1120,9 +1179,10 @@ public class ForensicStudioView extends JPanel {
         String fPredDisplay = fusionAvailable ? fPred : "UNAVAILABLE";
         String fScoreDisplay = fusionAvailable ? String.format(java.util.Locale.ROOT, "%.4f", fScoreOpt.get()) : "—";
         String fThreshDisplay = fusionAvailable ? String.format(java.util.Locale.ROOT, "%.4f", fThreshOpt.orElse(0.499895)) : "—";
-        String determinationDisplay = fusionAvailable ? overallVerdict : "UNASSESSED (FUSION UNAVAILABLE)";
         String confidenceDisplay = fusionAvailable ? String.format(java.util.Locale.ROOT, "%.1f%%", overallConf * 100.0) : "—";
         String uncertaintyDisplay = fusionAvailable ? fUncertainty : "UNASSESSED";
+        String basisDisplay = verdictBasis.isBlank() ? "—" : verdictBasis;
+        String reasonDisplay = verdictReason.isBlank() ? "Not reported" : verdictReason;
 
         verdictArea.setText(String.format("""
             ======================================================================
@@ -1130,13 +1190,15 @@ public class ForensicStudioView extends JPanel {
             ======================================================================
             Target Media: %s
             Final Multimodal Determination: %s
+            Assessment Basis: %s
+            Assessment Reason: %s
             Aggregate Decision Confidence: %s [Uncertainty: %s]
 
             1. VISUAL SPATIAL BASELINE (Phase 6 EfficientNet-B0)
                • Classification: %s
                • Synthetic Likelihood (Fake Score): %s (Uncalibrated raw sigmoid)
                • Video Mean-Logit Score: %s
-               • Evaluated Frames: %s uniform frames (224x224 RGB, ImageNet normalized)
+               • Evaluated Frames: %s uniform frames (224x224 letterboxed RGB, ImageNet normalized)
                • Operating Decision Threshold: 0.5000 (Validation-Derived Only)
 
             2. PHYSIOLOGICAL CONSISTENCY BASELINE (Phase 9 Random Forest)
@@ -1169,6 +1231,8 @@ public class ForensicStudioView extends JPanel {
             """,
             pathStr,
             determinationDisplay,
+            basisDisplay,
+            reasonDisplay,
             confidenceDisplay,
             uncertaintyDisplay,
             vPredDisplay, vFakeDisplay, vMeanLogitDisplay, vFramesDisplay,

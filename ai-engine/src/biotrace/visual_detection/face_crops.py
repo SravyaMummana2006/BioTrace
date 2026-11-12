@@ -20,6 +20,7 @@ import cv2
 import numpy as np
 
 from biotrace.core.logging import get_logger
+from biotrace.vision.image_preprocessing import letterbox_bgr
 from biotrace.vision.mediapipe_compat import create_face_mesh
 from biotrace.visual_detection.domain import FaceCropData, FaceDetectionStatus, VisualDetectionConfig
 
@@ -122,7 +123,10 @@ class FaceCropExtractor:
         status = FaceDetectionStatus.DEGRADED_QUALITY if is_degraded else FaceDetectionStatus.SUCCESS
 
         target_size = self.config.input_size
-        crop_resized = cv2.resize(crop_raw, target_size) if crop_raw.size > 0 else np.zeros((*target_size, 3), dtype=np.uint8)
+        if crop_raw.size > 0:
+            crop_resized, _ = letterbox_bgr(crop_raw, target_size=target_size)
+        else:
+            crop_resized = np.zeros((*target_size, 3), dtype=np.uint8)
 
         data = FaceCropData(
             frame_index=frame_index,

@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 
+from biotrace.vision.video_capture import open_video_capture
 from biotrace.core.logging import get_logger
 from biotrace.vision.mediapipe_compat import create_face_mesh
 from biotrace.spatial_consistency.domain import (
@@ -253,7 +254,7 @@ class FacialRegionTracker:
         cancel_event: Optional[Any] = None,
     ) -> Tuple[Dict[FacialRegionId, List[RegionalSample]], Dict[str, Any]]:
         """Processes target video container and extracts regional samples per frame."""
-        cap = cv2.VideoCapture(video_path)
+        cap = open_video_capture(video_path)
         if not cap.isOpened():
             return {r: [] for r in FacialRegionId}, {
                 "error": "Failed to open video container",

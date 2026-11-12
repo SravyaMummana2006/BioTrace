@@ -18,6 +18,7 @@ from typing import Any, List, Optional, Sequence, Tuple, Union
 import cv2
 import numpy as np
 
+from biotrace.vision.video_capture import open_video_capture
 from biotrace.core.logging import get_logger
 from biotrace.vision.mediapipe_compat import create_face_mesh
 from biotrace.facial_dynamics.domain import (
@@ -361,7 +362,7 @@ class EyeLandmarkTracker:
         Returns:
             List[EyeOpennessSample]: Temporal sequence of frame samples with computed velocities.
         """
-        cap = cv2.VideoCapture(video_path)
+        cap = open_video_capture(video_path)
         if not cap.isOpened():
             logger.warning("VideoCapture failed to open file: %s", video_path)
             return []

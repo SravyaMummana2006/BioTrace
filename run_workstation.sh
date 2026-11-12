@@ -16,7 +16,7 @@ fi
 # Pick a loopback port so an existing workstation can keep running.
 port=$("$python" -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
 export BIOTRACE_API_URL="http://127.0.0.1:$port"
-"$python" -m uvicorn biotrace.main:create_app --factory --app-dir ai-engine/src \
+BIOTRACE_WORKER_THREADS="${BIOTRACE_WORKER_THREADS:-1}" "$python" -m uvicorn biotrace.main:create_app --factory --app-dir ai-engine/src \
     --host 127.0.0.1 --port "$port" &
 backend_pid=$!
 cleanup() {

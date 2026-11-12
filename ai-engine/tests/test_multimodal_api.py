@@ -9,6 +9,8 @@ Verifies:
 """
 
 from pathlib import Path
+import cv2
+import numpy as np
 from fastapi.testclient import TestClient
 import pytest
 
@@ -40,6 +42,44 @@ def test_multimodal_analyze_invalid_extension(client: TestClient, tmp_path: Path
     resp = client.post("/api/v1/multimodal/analyze", json={"video_path": str(txt_file)})
     assert resp.status_code == 400
     assert "unsupported" in resp.json()["detail"].lower()
+
+
+def test_portrait_video_is_assessed_not_aspect_gated(client: TestClient, tmp_path: Path):
+    """A decodable portrait video must not be forced to UNASSESSED by layout alone."""
+    path = tmp_path / "portrait.mp4"
+    writer = cv2.VideoWriter(
+        str(path), cv2.VideoWriter_fourcc(*"mp4v"), 30.0, (216, 480)
+    )
+    for i in range(60):
+        frame = np.zeros((480, 216, 3), dtype=np.uint8)
+        frame[:, :, 1] = (i * 4) % 255
+        writer.write(frame)
+    writer.release()
+
+    resp = client.post("/api/v1/multimodal/analyze", json={"video_path": str(path)})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["visual_model"]["non_square_input"] is True
+    assert data["visual_model"]["status"] == "COMPLETED"
+    assert data["overall_verdict"] in ("REAL", "FAKE")
+    assert data["verdict_basis"] == "visual_only"
+    assert "aspect" not in data["verdict_reason"].lower()
+
+
+def test_unreadable_video_returns_concrete_unassessed_reason(client: TestClient, tmp_path: Path):
+    """Corrupt media must produce an explicit UNASSESSED reason, not fabricated scores."""
+    path = tmp_path / "corrupt.mp4"
+    path.write_bytes(b"\x00\x01\x02\x03\x04")
+
+    resp = client.post("/api/v1/multimodal/analyze", json={"video_path": str(path)})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["overall_verdict"] == "UNASSESSED"
+    assert data["verdict_basis"] == "unassessed"
+    assert data["verdict_reason"]
+    assert data["visual_model"]["status"] in ("FAILED", "UNAVAILABLE")
+    assert data["visual_model"]["prediction"] == "UNAVAILABLE"
+    assert data["multimodal_fusion"]["fusion_score"] is None
 
 
 def test_multimodal_analyze_real_video(client: TestClient):
